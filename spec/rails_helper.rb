@@ -1,14 +1,18 @@
+require_relative "spec_helper"
+
 ENV["RAILS_ENV"] ||= "test"
 
 require "bundler/setup"
 require "rails"
 require "active_record"
 require "active_job"
-require "minitest/autorun"
-require "minitest/reporters"
-require "webmock/minitest"
-require "mocha/minitest"
+require "action_controller"
+require "action_view"
+require "rspec/rails"
+require "factory_bot"
 require "rails/contact"
+
+require_relative "../app/controllers/concerns/rails/contact/filterable"
 require_relative "../app/models/rails/contact/application_record"
 require_relative "../app/models/rails/contact/contact"
 require_relative "../app/models/rails/contact/contact_email"
@@ -18,10 +22,11 @@ require_relative "../app/models/rails/contact/contact_website"
 require_relative "../app/models/rails/contact/contact_event"
 require_relative "../app/models/rails/contact/label"
 require_relative "../app/models/rails/contact/contact_label"
+require_relative "../app/helpers/rails/contact/application_helper"
+require_relative "../app/controllers/rails/contact/application_controller"
+require_relative "../app/controllers/rails/contact/contacts_controller"
 require_relative "../app/jobs/rails/contact/application_job"
 require_relative "../app/jobs/rails/contact/index_contact_job"
-
-Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
 
@@ -34,9 +39,11 @@ ActiveRecord::Schema.define do
     t.string :current_city
     t.string :google_resource_name
     t.string :google_etag
+    t.string :photo_url
     t.datetime :google_last_modified_at
     t.datetime :last_synced_at
     t.boolean :sync_eligible, default: true
+    t.boolean :starred, default: false
     t.text :biography
     t.text :metadata
     t.timestamps
@@ -97,13 +104,16 @@ end
 
 ActiveJob::Base.queue_adapter = :test
 
-class Minitest::Test
-  def setup
-    Rails::Contact::ContactAddress.delete_all
-    Rails::Contact::ContactWebsite.delete_all
-    Rails::Contact::ContactEvent.delete_all
+RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+  FactoryBot.find_definitions
+
+  config.before do
     Rails::Contact::ContactLabel.delete_all
     Rails::Contact::Label.delete_all
+    Rails::Contact::ContactEvent.delete_all
+    Rails::Contact::ContactWebsite.delete_all
+    Rails::Contact::ContactAddress.delete_all
     Rails::Contact::ContactPhone.delete_all
     Rails::Contact::ContactEmail.delete_all
     Rails::Contact::Contact.delete_all

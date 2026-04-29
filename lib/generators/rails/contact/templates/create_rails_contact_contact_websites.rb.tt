@@ -1,0 +1,11 @@
+class CreateRailsContactContactWebsites < ActiveRecord::Migration[7.1]
+  def change
+    create_table :rails_contact_contact_websites do |t|
+      t.references :contact, null: false, foreign_key: { to_table: :rails_contact_contacts }
+      t.string :url, null: false
+      t.string :label
+
+      t.timestamps
+    end
+  end
+end

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2
+
+- Breaking parity-focused rewrite foundation for richer Google-like contacts.
+- Added label, website, event, merge, and bulk-delete capabilities.
+- Added dynamic nested field add/remove behavior for multi-value rows.
+- Introduced RSpec suite with SimpleCov gates (100% line/branch in tracked critical files).
+- Added parity matrix, roadmap, and migration documentation.
+
 ## 0.1.1
 
 - Fix mounted route shape to avoid `/contacts/contacts` duplication.

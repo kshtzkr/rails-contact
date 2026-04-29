@@ -1,0 +1,18 @@
+<div class="grid grid-cols-1 gap-3 md:grid-cols-5" data-nested-fields-target="row">
+  <%= email_fields.hidden_field :_destroy, value: 0, data: { nested_fields_target: "destroyField" } %>
+  <div class="md:col-span-3">
+    <%= email_fields.label :value, "Email", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= email_fields.email_field :value, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div>
+    <%= email_fields.label :label, "Label", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= email_fields.text_field :label, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex items-end gap-2">
+    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+      <%= email_fields.check_box :primary, class: "h-4 w-4 rounded border-gray-300 text-blue-600" %>
+      Primary
+    </label>
+    <button type="button" class="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700" data-action="nested-fields#remove">Remove</button>
+  </div>
+</div>

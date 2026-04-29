@@ -1,0 +1,18 @@
+<div class="grid grid-cols-1 gap-3 md:grid-cols-4" data-nested-fields-target="row">
+  <%= event_fields.hidden_field :_destroy, value: 0, data: { nested_fields_target: "destroyField" } %>
+  <div>
+    <%= event_fields.label :event_type, "Event Type", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= event_fields.text_field :event_type, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div>
+    <%= event_fields.label :event_date, "Date", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= event_fields.date_field :event_date, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div>
+    <%= event_fields.label :label, "Label", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= event_fields.text_field :label, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex items-end">
+    <button type="button" class="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700" data-action="nested-fields#remove">Remove</button>
+  </div>
+</div>

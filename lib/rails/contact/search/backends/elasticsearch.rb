@@ -53,9 +53,13 @@ module Rails
                   full_name: { type: "text", analyzer: "folding_analyzer" },
                   emails: { type: "keyword" },
                   phones_e164: { type: "keyword" },
+                  labels: { type: "keyword" },
+                  company: { type: "text", analyzer: "folding_analyzer" },
+                  job_title: { type: "text", analyzer: "folding_analyzer" },
                   region_name: { type: "keyword" },
                   current_city: { type: "keyword" },
                   departure_city: { type: "keyword" },
+                  starred: { type: "boolean" },
                   sync_eligible: { type: "boolean" },
                   updated_at: { type: "date" }
                 }
@@ -82,7 +86,7 @@ module Rails
             [ {
               multi_match: {
                 query: query,
-                fields: [ "full_name^3", "emails^2", "phones_e164" ],
+                fields: [ "full_name^3", "emails^2", "phones_e164", "company^2", "job_title", "labels^2" ],
                 fuzziness: "AUTO"
               }
             } ]
@@ -92,6 +96,10 @@ module Rails
             clauses = []
             clauses << { term: { current_city: filters["city"] } } if filters["city"].present?
             clauses << { term: { region_name: filters["region"] } } if filters["region"].present?
+            unless filters["starred"].nil?
+              starred_value = ActiveModel::Type::Boolean.new.cast(filters["starred"])
+              clauses << { term: { starred: starred_value } }
+            end
             unless filters["sync_eligible"].nil?
               value = ActiveModel::Type::Boolean.new.cast(filters["sync_eligible"])
               clauses << { term: { sync_eligible: value } }
@@ -105,9 +113,13 @@ module Rails
               full_name: contact.full_name,
               emails: contact.emails.map(&:value),
               phones_e164: contact.phones.map(&:e164),
+              labels: contact.labels.map(&:name),
+              company: contact.meta(:company),
+              job_title: contact.meta(:job_title),
               region_name: contact.region_name,
               current_city: contact.current_city,
               departure_city: contact.departure_city,
+              starred: contact.starred,
               sync_eligible: contact.sync_eligible,
               updated_at: contact.updated_at
             }

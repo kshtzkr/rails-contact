@@ -11,7 +11,9 @@ require "rails/contact/csv/import_service"
 require "rails/contact/google/client"
 require "rails/contact/google/token_store"
 require "rails/contact/google/payload_mapper"
+require "rails/contact/google/conflict_resolver"
 require "rails/contact/google/sync_service"
+require "rails/contact/merge_contacts_service"
 
 module Rails
   module Contact

@@ -1,0 +1,15 @@
+/coverage/
+
+# Bundler and local environment
+/vendor/bundle/
+/.bundle/
+
+# Logs and temp files
+/log/
+/tmp/
+*.log
+
+# OS/editor noise
+.DS_Store
+*.swp
+*.swo

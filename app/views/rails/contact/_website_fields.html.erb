@@ -1,0 +1,14 @@
+<div class="grid grid-cols-1 gap-3 md:grid-cols-4" data-nested-fields-target="row">
+  <%= website_fields.hidden_field :_destroy, value: 0, data: { nested_fields_target: "destroyField" } %>
+  <div class="md:col-span-2">
+    <%= website_fields.label :url, "Website", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= website_fields.url_field :url, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div>
+    <%= website_fields.label :label, "Label", class: "mb-1 block text-sm font-medium text-gray-700" %>
+    <%= website_fields.text_field :label, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex items-end">
+    <button type="button" class="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700" data-action="nested-fields#remove">Remove</button>
+  </div>
+</div>

@@ -8,9 +8,11 @@ class CreateRailsContactContacts < ActiveRecord::Migration[7.1]
       t.string :current_city
       t.string :google_resource_name
       t.string :google_etag
+      t.string :photo_url
       t.datetime :google_last_modified_at
       t.datetime :last_synced_at
       t.boolean :sync_eligible, null: false, default: true
+      t.boolean :starred, null: false, default: false
       t.text :biography
       t.jsonb :metadata, null: false, default: {}
 

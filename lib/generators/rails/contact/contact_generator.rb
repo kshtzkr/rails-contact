@@ -22,6 +22,10 @@ module Rails
           migration_template "create_rails_contact_contact_emails.rb.tt", "db/migrate/create_rails_contact_contact_emails.rb"
           migration_template "create_rails_contact_contact_phones.rb.tt", "db/migrate/create_rails_contact_contact_phones.rb"
           migration_template "create_rails_contact_contact_addresses.rb.tt", "db/migrate/create_rails_contact_contact_addresses.rb"
+          migration_template "create_rails_contact_contact_websites.rb.tt", "db/migrate/create_rails_contact_contact_websites.rb"
+          migration_template "create_rails_contact_contact_events.rb.tt", "db/migrate/create_rails_contact_contact_events.rb"
+          migration_template "create_rails_contact_labels.rb.tt", "db/migrate/create_rails_contact_labels.rb"
+          migration_template "create_rails_contact_contact_labels.rb.tt", "db/migrate/create_rails_contact_contact_labels.rb"
         end
       end
     end

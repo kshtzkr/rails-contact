@@ -1,4 +1,6 @@
 Rails::Contact::Engine.routes.draw do
+  post "/bulk_destroy", to: "contacts#bulk_destroy", as: :bulk_destroy_contacts
+  post "/merge", to: "contacts#merge", as: :merge_contacts
   get "/", to: "contacts#index", as: :contacts
   get "/new", to: "contacts#new", as: :new_contact
   post "/", to: "contacts#create"

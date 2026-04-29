@@ -1,0 +1,186 @@
+<%= form_with model: contact, local: true, class: "space-y-6" do |f| %>
+  <% if contact.errors.any? %>
+    <div data-turbo-temporary="true" class="rounded-md border border-red-200 bg-red-50 p-4">
+      <h2 class="text-sm font-semibold text-red-700"><%= pluralize(contact.errors.count, "error") %> prevented save</h2>
+      <ul class="mt-2 list-disc pl-5 text-sm text-red-700">
+        <% contact.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="rounded-lg border border-gray-200 p-4">
+    <h3 class="mb-3 text-base font-semibold text-gray-900">Basic Info</h3>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div>
+        <%= f.label :metadata_prefix, "Prefix", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_prefix, name: "contact[metadata][prefix]", value: contact.meta(:prefix), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :given_name, "First name", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :given_name, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :metadata_middle_name, "Middle name", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_middle_name, name: "contact[metadata][middle_name]", value: contact.meta(:middle_name), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :family_name, "Last name", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :family_name, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :metadata_suffix, "Suffix", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_suffix, name: "contact[metadata][suffix]", value: contact.meta(:suffix), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :metadata_nickname, "Nickname", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_nickname, name: "contact[metadata][nickname]", value: contact.meta(:nickname), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div class="md:col-span-2">
+        <%= f.label :labels_csv, "Labels (comma separated)", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :labels_csv, value: contact.labels_csv, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :photo_url, "Photo URL", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.url_field :photo_url, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div class="md:col-span-2">
+        <label class="mt-7 inline-flex items-center gap-2 text-sm text-gray-700">
+          <%= f.check_box :sync_eligible, class: "h-4 w-4 rounded border-gray-300 text-blue-600" %>
+          Eligible for Google sync
+        </label>
+        <label class="ml-4 mt-7 inline-flex items-center gap-2 text-sm text-gray-700">
+          <%= f.check_box :starred, class: "h-4 w-4 rounded border-gray-300 text-blue-600" %>
+          Starred
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 p-4">
+    <h3 class="mb-3 text-base font-semibold text-gray-900">Work</h3>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div>
+        <%= f.label :metadata_company, "Company", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_company, name: "contact[metadata][company]", value: contact.meta(:company), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :metadata_job_title, "Job title", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_job_title, name: "contact[metadata][job_title]", value: contact.meta(:job_title), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :metadata_department, "Department", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :metadata_department, name: "contact[metadata][department]", value: contact.meta(:department), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 p-4" data-nested-wrapper>
+    <h3 class="mb-3 text-base font-semibold text-gray-900">Contact Methods</h3>
+    <div class="space-y-4">
+      <h4 class="text-sm font-semibold text-gray-700">Emails</h4>
+      <div class="space-y-3" id="email-fields">
+      <%= f.fields_for :emails do |email_fields| %>
+        <%= render "rails/contact/email_fields", email_fields: email_fields %>
+      <% end %>
+      </div>
+      <button type="button" class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700" data-add-nested data-target="#email-fields" data-template="#email-template">+ Add email</button>
+      <template id="email-template">
+        <%= f.fields_for :emails, Rails::Contact::ContactEmail.new, child_index: "NEW_RECORD" do |email_fields| %>
+          <%= render "rails/contact/email_fields", email_fields: email_fields %>
+        <% end %>
+      </template>
+
+      <h4 class="pt-2 text-sm font-semibold text-gray-700">Phones</h4>
+      <div class="space-y-3" id="phone-fields">
+      <%= f.fields_for :phones do |phone_fields| %>
+        <%= render "rails/contact/phone_fields", phone_fields: phone_fields %>
+      <% end %>
+      </div>
+      <button type="button" class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700" data-add-nested data-target="#phone-fields" data-template="#phone-template">+ Add phone</button>
+      <template id="phone-template">
+        <%= f.fields_for :phones, Rails::Contact::ContactPhone.new, child_index: "NEW_RECORD" do |phone_fields| %>
+          <%= render "rails/contact/phone_fields", phone_fields: phone_fields %>
+        <% end %>
+      </template>
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 p-4" data-nested-wrapper>
+    <h3 class="mb-3 text-base font-semibold text-gray-900">Address & Extra Details</h3>
+    <div class="space-y-3" id="address-fields">
+      <%= f.fields_for :addresses do |address_fields| %>
+        <%= render "rails/contact/address_fields", address_fields: address_fields %>
+      <% end %>
+    </div>
+    <button type="button" class="mt-2 rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700" data-add-nested data-target="#address-fields" data-template="#address-template">+ Add address</button>
+    <template id="address-template">
+      <%= f.fields_for :addresses, Rails::Contact::ContactAddress.new, child_index: "NEW_RECORD" do |address_fields| %>
+        <%= render "rails/contact/address_fields", address_fields: address_fields %>
+      <% end %>
+    </template>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div>
+        <%= f.label :current_city, class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :current_city, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :departure_city, class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :departure_city, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :region_name, "Interested region", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :region_name, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :metadata_birthday, "Birthday", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :metadata_birthday, name: "contact[metadata][birthday]", value: contact.meta(:birthday), class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+    </div>
+
+    <div class="mt-4 space-y-3" data-nested-wrapper>
+      <h4 class="text-sm font-semibold text-gray-700">Websites</h4>
+      <div class="space-y-3" id="website-fields">
+        <%= f.fields_for :websites do |website_fields| %>
+          <%= render "rails/contact/website_fields", website_fields: website_fields %>
+        <% end %>
+      </div>
+      <button type="button" class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700" data-add-nested data-target="#website-fields" data-template="#website-template">+ Add website</button>
+      <template id="website-template">
+        <%= f.fields_for :websites, Rails::Contact::ContactWebsite.new, child_index: "NEW_RECORD" do |website_fields| %>
+          <%= render "rails/contact/website_fields", website_fields: website_fields %>
+        <% end %>
+      </template>
+    </div>
+
+    <div class="mt-4 space-y-3" data-nested-wrapper>
+      <h4 class="text-sm font-semibold text-gray-700">Events</h4>
+      <div class="space-y-3" id="event-fields">
+        <%= f.fields_for :events do |event_fields| %>
+          <%= render "rails/contact/event_fields", event_fields: event_fields %>
+        <% end %>
+      </div>
+      <button type="button" class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700" data-add-nested data-target="#event-fields" data-template="#event-template">+ Add event</button>
+      <template id="event-template">
+        <%= f.fields_for :events, Rails::Contact::ContactEvent.new, child_index: "NEW_RECORD" do |event_fields| %>
+          <%= render "rails/contact/event_fields", event_fields: event_fields %>
+        <% end %>
+      </template>
+    </div>
+    <div class="mt-4">
+      <%= f.label :biography, "Notes", class: "mb-1 block text-sm font-medium text-gray-700" %>
+      <%= f.text_area :biography, rows: 4, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
+    <div class="mt-3">
+      <%= f.label :metadata_notes, "Internal notes", class: "mb-1 block text-sm font-medium text-gray-700" %>
+      <%= f.text_area :metadata_notes, name: "contact[metadata][notes]", value: contact.meta(:notes), rows: 3, class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <%= f.submit class: "inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700" %>
+    <%= link_to "Back", contacts_path, class: "inline-flex rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+  </div>
+<% end %>

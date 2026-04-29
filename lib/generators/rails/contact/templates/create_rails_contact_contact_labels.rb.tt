@@ -1,0 +1,12 @@
+class CreateRailsContactContactLabels < ActiveRecord::Migration[7.1]
+  def change
+    create_table :rails_contact_contact_labels do |t|
+      t.references :contact, null: false, foreign_key: { to_table: :rails_contact_contacts }
+      t.references :label, null: false, foreign_key: { to_table: :rails_contact_labels }
+
+      t.timestamps
+    end
+
+    add_index :rails_contact_contact_labels, [ :contact_id, :label_id ], unique: true, name: "idx_rails_contact_contact_labels_unique"
+  end
+end
