@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+- Scope engine stylesheet to contacts content only (`.rails-contact-page`) so host app layout/header styling is not overridden.
+- Add missing utility shims (`block`, `flex-wrap`, `text-base`, `mt-7`) used by contact templates for consistent spacing/labels.
+
 ## 0.1.4
 
 - Default to the host `application` layout when the engine is mounted, with `inherit_host_layout` (default `true`) to opt back into the engine-only layout.

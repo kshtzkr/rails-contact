@@ -1,4 +1,6 @@
 <%= render "rails/contact/stylesheet" %>
-<h1>New Contact</h1>
-<%= render "rails/contact/form", contact: @contact %>
-<%= link_to "Back", contacts_path %>
+<div class="rails-contact-page space-y-6">
+  <h1>New Contact</h1>
+  <%= render "rails/contact/form", contact: @contact %>
+  <%= link_to "Back", contacts_path %>
+</div>
