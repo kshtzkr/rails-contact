@@ -4,7 +4,8 @@ module Rails
       attr_accessor :contact_class_name, :elasticsearch_url, :search_backend,
                     :google_sync_enabled, :google_max_contacts, :rolling_window_sort,
                     :google_client_id, :google_client_secret, :google_redirect_uri,
-                    :google_token_path, :reset_index_on_boot, :default_per_page
+                    :google_token_path, :reset_index_on_boot, :default_per_page,
+                    :inherit_host_layout
 
       def initialize
         @contact_class_name = "Rails::Contact::Contact"
@@ -19,6 +20,10 @@ module Rails
         @google_token_path = ENV.fetch("RAILS_CONTACT_GOOGLE_TOKEN_PATH", "tmp/rails_contact_google_token.json")
         @reset_index_on_boot = false
         @default_per_page = 25
+        # When true (default), engine pages use the host app +layout+ named +application+ so
+        # importmap/Turbo match the rest of the app. Engine CSS and nested-field JS are still
+        # injected from gem templates so behavior does not depend on the engine layout asset tags.
+        @inherit_host_layout = true
       end
     end
   end

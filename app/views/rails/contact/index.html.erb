@@ -1,3 +1,4 @@
+<%= render "rails/contact/stylesheet" %>
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold text-gray-900">Contacts</h1>
@@ -78,11 +79,4 @@
   </div>
 </div>
 
-<script>
-  document.addEventListener("change", function(event) {
-    if (!event.target.classList.contains("bulk-id-checkbox")) return;
-    const values = Array.from(document.querySelectorAll(".bulk-id-checkbox:checked")).map((node) => node.value);
-    const field = document.getElementById("bulk-ids-field");
-    if (field) field.value = values.join(",");
-  });
-</script>
+<%= render "rails/contact/bulk_selection_script" %>

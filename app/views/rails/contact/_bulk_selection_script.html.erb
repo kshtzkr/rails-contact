@@ -1,0 +1,13 @@
+<script>
+(() => {
+  if (window.__railsContactBulkSelectionBound) return;
+  window.__railsContactBulkSelectionBound = true;
+
+  document.addEventListener("change", function(event) {
+    if (!event.target.classList.contains("bulk-id-checkbox")) return;
+    const values = Array.from(document.querySelectorAll(".bulk-id-checkbox:checked")).map((node) => node.value);
+    const field = document.getElementById("bulk-ids-field");
+    if (field) field.value = values.join(",");
+  });
+})();
+</script>

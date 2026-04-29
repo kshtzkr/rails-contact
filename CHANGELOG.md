@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+- Default to the host `application` layout when the engine is mounted, with `inherit_host_layout` (default `true`) to opt back into the engine-only layout.
+- Ensure nested field add/remove and bulk checkbox scripts run when the host uses importmap (inline scripts + idempotent global guards; same guard in `nested_fields.js` for the Sprockets bundle).
+- Pull engine stylesheet into each main contact view so styling works without the engine layout’s asset tags.
+
 ## 0.1.3
 
 - Flatten view partial paths under `app/views/rails/contact` and remove legacy `contacts/` partial nesting.

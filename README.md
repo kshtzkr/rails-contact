@@ -20,7 +20,7 @@ It provides:
 ### 1) Add gem
 
 ```ruby
-gem "rails-contact", "~> 0.1.3"
+gem "rails-contact", "~> 0.1.4"
 ```
 
 ```bash
@@ -54,6 +54,18 @@ mount Rails::Contact::Engine => "/contacts", as: "rails_contact"
 - `/contacts`
 - `/contacts/new`
 - `/contacts/:id`
+
+### Host layout and importmap
+
+By default the engine uses your host app layout named `application` so contacts pages match the rest of your UI (including Turbo and importmap). Styles for engine markup are included per page via `stylesheet_link_tag`, and nested “add row” / bulk-selection behavior uses small inline scripts so you do **not** need to pin gem JavaScript in the host importmap.
+
+To use the engine’s standalone layout and bundled `javascript_include_tag "rails/contact/application"` instead:
+
+```ruby
+Rails::Contact.configure do |config|
+  config.inherit_host_layout = false
+end
+```
 
 ---
 
