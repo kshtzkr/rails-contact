@@ -1,0 +1,13 @@
+<h1><%= @contact.full_name %></h1>
+<p>Email: <%= @contact.primary_email&.value %></p>
+<p>Phone: <%= @contact.primary_phone&.e164 %></p>
+<p>Current city: <%= @contact.current_city %></p>
+<p>Departure city: <%= @contact.departure_city %></p>
+<p>Region: <%= @contact.region_name %></p>
+<p>Biography: <%= @contact.biography %></p>
+
+<p>
+  <%= link_to "Edit", edit_contact_path(@contact) %> |
+  <%= link_to "Delete", contact_path(@contact), data: {turbo_method: :delete, turbo_confirm: "Delete contact?"} %> |
+  <%= link_to "Back", contacts_path %>
+</p>

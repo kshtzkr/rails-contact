@@ -1,0 +1,13 @@
+class CreateRailsContactContactAddresses < ActiveRecord::Migration[7.1]
+  def change
+    create_table :rails_contact_contact_addresses do |t|
+      t.references :contact, null: false, foreign_key: {to_table: :rails_contact_contacts}
+      t.string :city
+      t.string :departure_city
+      t.text :formatted_value
+      t.string :label
+
+      t.timestamps
+    end
+  end
+end

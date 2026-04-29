@@ -1,0 +1,24 @@
+class CreateRailsContactContacts < ActiveRecord::Migration[7.1]
+  def change
+    create_table :rails_contact_contacts do |t|
+      t.string :given_name, null: false
+      t.string :family_name
+      t.string :region_name
+      t.string :departure_city
+      t.string :current_city
+      t.string :google_resource_name
+      t.string :google_etag
+      t.datetime :google_last_modified_at
+      t.datetime :last_synced_at
+      t.boolean :sync_eligible, null: false, default: true
+      t.text :biography
+      t.jsonb :metadata, null: false, default: {}
+
+      t.timestamps
+    end
+
+    add_index :rails_contact_contacts, :updated_at
+    add_index :rails_contact_contacts, :sync_eligible
+    add_index :rails_contact_contacts, :google_resource_name, unique: true
+  end
+end

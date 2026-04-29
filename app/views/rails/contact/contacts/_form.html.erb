@@ -1,0 +1,61 @@
+<%= form_with model: contact, local: true do |f| %>
+  <% if contact.errors.any? %>
+    <div data-turbo-temporary="true">
+      <h2><%= pluralize(contact.errors.count, "error") %> prevented save</h2>
+      <ul>
+        <% contact.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <p>
+    <%= f.label :given_name %>
+    <%= f.text_field :given_name %>
+  </p>
+  <p>
+    <%= f.label :family_name %>
+    <%= f.text_field :family_name %>
+  </p>
+  <p>
+    <%= f.label :current_city %>
+    <%= f.text_field :current_city %>
+  </p>
+  <p>
+    <%= f.label :departure_city %>
+    <%= f.text_field :departure_city %>
+  </p>
+  <p>
+    <%= f.label :region_name %>
+    <%= f.text_field :region_name %>
+  </p>
+  <p>
+    <%= f.label :biography %>
+    <%= f.text_area :biography, rows: 3 %>
+  </p>
+  <p>
+    <%= f.label :sync_eligible %>
+    <%= f.check_box :sync_eligible %>
+  </p>
+
+  <%= f.fields_for :emails do |email_fields| %>
+    <p>
+      <%= email_fields.label :value, "Email" %>
+      <%= email_fields.email_field :value %>
+      <%= email_fields.label :primary %>
+      <%= email_fields.check_box :primary %>
+    </p>
+  <% end %>
+
+  <%= f.fields_for :phones do |phone_fields| %>
+    <p>
+      <%= phone_fields.label :value, "Phone" %>
+      <%= phone_fields.text_field :value %>
+      <%= phone_fields.label :label %>
+      <%= phone_fields.text_field :label %>
+    </p>
+  <% end %>
+
+  <%= f.submit %>
+<% end %>

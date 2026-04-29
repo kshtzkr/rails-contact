@@ -1,0 +1,38 @@
+<h1>Contacts</h1>
+
+<%= form_with url: contacts_path, method: :get, local: true do |f| %>
+  <%= f.label :q, "Search" %>
+  <%= f.text_field :q, value: @query %>
+  <%= f.label :city, "Current City" %>
+  <%= f.text_field :city, value: params[:city] %>
+  <%= f.label :region, "Region" %>
+  <%= f.text_field :region, value: params[:region] %>
+  <%= f.submit "Filter" %>
+<% end %>
+
+<p><%= link_to "New Contact", new_contact_path %></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Current City</th>
+      <th>Region</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @contacts.each do |contact| %>
+      <tr>
+        <td><%= contact.full_name %></td>
+        <td><%= contact.primary_email&.value %></td>
+        <td><%= contact.primary_phone&.e164 %></td>
+        <td><%= contact.current_city %></td>
+        <td><%= contact.region_name %></td>
+        <td><%= link_to "Show", contact_path(contact) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
