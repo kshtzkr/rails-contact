@@ -10,6 +10,7 @@ gem "rack-test"
 gem "minitest-reporters"
 gem "mocha"
 gem "webmock"
+gem "parallel", "< 2.1"
 
 # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
 gem "rubocop-rails-omakase", require: false
