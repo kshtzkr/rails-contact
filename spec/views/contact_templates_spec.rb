@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "contact templates" do
   let(:form_template) { File.read(File.expand_path("../../app/views/rails/contact/_form.html.erb", __dir__)) }
-  let(:index_template) { File.read(File.expand_path("../../app/views/rails/contact/contacts/index.html.erb", __dir__)) }
+  let(:index_template) { File.read(File.expand_path("../../app/views/rails/contact/index.html.erb", __dir__)) }
 
   it "contains dynamic nested field hooks in form" do
     expect(form_template).to include("data-add-nested")

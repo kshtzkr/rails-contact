@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.metadata["bug_tracker_uri"] = "https://github.com/kshtzkr/rails-contact/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files = Dir.glob("{app,bin,config,lib,test,.github}/**/*") + %w[README.md CHANGELOG.md LICENSE.txt MIT-LICENSE Gemfile Rakefile]
+  spec.files = Dir.glob("{app,bin,config,lib,docs,spec,.github}/**/*") + %w[README.md CHANGELOG.md LICENSE.txt MIT-LICENSE Gemfile Rakefile .rspec]
   spec.require_paths = [ "lib" ]
 
   spec.add_dependency "rails", ">= 7.1"

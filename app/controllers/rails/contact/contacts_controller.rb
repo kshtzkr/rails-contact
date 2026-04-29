@@ -11,16 +11,22 @@ module Rails
       def index
         @query = params[:q].to_s.strip
         @contacts = Search::Query.new(@query, filters: normalized_filters(filter_params)).call
+        render "rails/contact/index"
       end
 
-      def show; end
+      def show
+        render "rails/contact/show"
+      end
 
       def new
         @contact = Contact.new
         build_default_associations
+        render "rails/contact/new"
       end
 
-      def edit; end
+      def edit
+        render "rails/contact/edit"
+      end
 
       def create
         @contact = Contact.new(contact_params)
@@ -29,7 +35,7 @@ module Rails
           enqueue_index(@contact.id)
           redirect_to contact_path(@contact), notice: "Contact created."
         else
-          render :new, status: :unprocessable_entity
+          render "rails/contact/new", status: :unprocessable_entity
         end
       end
 
@@ -39,7 +45,7 @@ module Rails
           enqueue_index(@contact.id)
           redirect_to contact_path(@contact), notice: "Contact updated."
         else
-          render :edit, status: :unprocessable_entity
+          render "rails/contact/edit", status: :unprocessable_entity
         end
       end
 

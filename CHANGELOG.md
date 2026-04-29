@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- Flatten view partial paths under `app/views/rails/contact` and remove legacy `contacts/` partial nesting.
+- Add `.gitignore` to keep generated artifacts (including `coverage/`) out of release commits.
+- Update packaging/docs metadata for smoother RubyGems release workflow.
+
 ## 0.1.2
 
 - Breaking parity-focused rewrite foundation for richer Google-like contacts.

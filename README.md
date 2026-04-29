@@ -20,7 +20,7 @@ It provides:
 ### 1) Add gem
 
 ```ruby
-gem "rails-contact", "~> 0.1.1"
+gem "rails-contact", "~> 0.1.3"
 ```
 
 ```bash
