@@ -6,7 +6,7 @@ module Rails
       belongs_to :contact, class_name: "Rails::Contact::Contact", inverse_of: :emails
 
       validates :value, presence: true
-      validates :value, format: {with: URI::MailTo::EMAIL_REGEXP}
+      validates :value, format: { with: URI::MailTo::EMAIL_REGEXP }
 
       before_validation :normalize_value
 

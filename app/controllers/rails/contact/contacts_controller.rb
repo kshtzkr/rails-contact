@@ -1,7 +1,7 @@
 module Rails
   module Contact
     class ContactsController < ApplicationController
-      before_action :set_contact, only: [:show, :edit, :update, :destroy]
+      before_action :set_contact, only: [ :show, :edit, :update, :destroy ]
 
       def index
         @query = params[:q].to_s.strip
@@ -53,9 +53,9 @@ module Rails
       def contact_params
         params.require(:contact).permit(
           :given_name, :family_name, :current_city, :departure_city, :region_name, :biography, :sync_eligible,
-          emails_attributes: [:id, :value, :label, :primary, :_destroy],
-          phones_attributes: [:id, :value, :label, :primary, :_destroy],
-          addresses_attributes: [:id, :city, :departure_city, :formatted_value, :label, :_destroy]
+          emails_attributes: [ :id, :value, :label, :primary, :_destroy ],
+          phones_attributes: [ :id, :value, :label, :primary, :_destroy ],
+          addresses_attributes: [ :id, :city, :departure_city, :formatted_value, :label, :_destroy ]
         )
       end
 

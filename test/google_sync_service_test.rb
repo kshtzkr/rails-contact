@@ -14,12 +14,12 @@ module Rails
 
         def create_contact(payload)
           @created << payload
-          {"resourceName" => "people/123", "etag" => "abc"}
+          { "resourceName" => "people/123", "etag" => "abc" }
         end
 
         def update_contact(_resource_name, payload)
           @created << payload
-          {"resourceName" => "people/123", "etag" => "def"}
+          { "resourceName" => "people/123", "etag" => "def" }
         end
       end
 
@@ -30,7 +30,7 @@ module Rails
       def test_syncs_only_within_rolling_window
         older = Contact.create!(given_name: "Old", updated_at: 2.days.ago, created_at: 2.days.ago)
         newer = Contact.create!(given_name: "New", updated_at: Time.current, created_at: Time.current)
-        [older, newer].each do |contact|
+        [ older, newer ].each do |contact|
           contact.emails.create!(value: "#{contact.given_name.downcase}@example.com", primary: true)
           contact.phones.create!(value: "+911234567890", e164: "+911234567890", primary: true)
         end

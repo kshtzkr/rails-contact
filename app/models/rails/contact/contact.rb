@@ -17,7 +17,7 @@ module Rails
       }
 
       def full_name
-        [given_name, family_name].compact.join(" ").strip
+        [ given_name, family_name ].compact.join(" ").strip
       end
 
       def primary_email

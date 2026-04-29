@@ -34,7 +34,7 @@ module Rails
           contact.assign_attributes(attrs)
           contact.save!
           upsert_associations(contact, row)
-          IndexContactJob.perform_later(contact.id)
+          Rails::Contact::IndexContactJob.perform_later(contact.id)
         end
 
         def build_attributes(row)
@@ -46,10 +46,10 @@ module Rails
 
         def find_or_initialize(row)
           email = normalize_email(row["Enquirer Email"])
-          return Contact.new if email.blank?
-          return Contact.new if @dedupe_key != :email
+          return Rails::Contact::Contact.new if email.blank?
+          return Rails::Contact::Contact.new if @dedupe_key != :email
 
-          Contact.joins(:emails).where(rails_contact_contact_emails: {value: email}).first || Contact.new
+          Rails::Contact::Contact.joins(:emails).where(rails_contact_contact_emails: { value: email }).first || Rails::Contact::Contact.new
         end
 
         def upsert_associations(contact, row)

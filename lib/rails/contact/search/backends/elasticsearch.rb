@@ -43,21 +43,21 @@ module Rails
                   analyzer: {
                     folding_analyzer: {
                       tokenizer: "standard",
-                      filter: ["lowercase", "asciifolding"]
+                      filter: [ "lowercase", "asciifolding" ]
                     }
                   }
                 }
               },
               mappings: {
                 properties: {
-                  full_name: {type: "text", analyzer: "folding_analyzer"},
-                  emails: {type: "keyword"},
-                  phones_e164: {type: "keyword"},
-                  region_name: {type: "keyword"},
-                  current_city: {type: "keyword"},
-                  departure_city: {type: "keyword"},
-                  sync_eligible: {type: "boolean"},
-                  updated_at: {type: "date"}
+                  full_name: { type: "text", analyzer: "folding_analyzer" },
+                  emails: { type: "keyword" },
+                  phones_e164: { type: "keyword" },
+                  region_name: { type: "keyword" },
+                  current_city: { type: "keyword" },
+                  departure_city: { type: "keyword" },
+                  sync_eligible: { type: "boolean" },
+                  updated_at: { type: "date" }
                 }
               }
             }
@@ -66,7 +66,7 @@ module Rails
           def search_body(query, filters)
             {
               size: Rails::Contact.configuration.default_per_page,
-              sort: [{updated_at: {order: "desc"}}, {id: {order: "desc"}}],
+              sort: [ { updated_at: { order: "desc" } }, { id: { order: "desc" } } ],
               query: {
                 bool: {
                   must: search_clause(query),
@@ -77,24 +77,24 @@ module Rails
           end
 
           def search_clause(query)
-            return [{match_all: {}}] if query.blank?
+            return [ { match_all: {} } ] if query.blank?
 
-            [{
+            [ {
               multi_match: {
                 query: query,
-                fields: ["full_name^3", "emails^2", "phones_e164"],
+                fields: [ "full_name^3", "emails^2", "phones_e164" ],
                 fuzziness: "AUTO"
               }
-            }]
+            } ]
           end
 
           def filter_clauses(filters)
             clauses = []
-            clauses << {term: {current_city: filters["city"]}} if filters["city"].present?
-            clauses << {term: {region_name: filters["region"]}} if filters["region"].present?
+            clauses << { term: { current_city: filters["city"] } } if filters["city"].present?
+            clauses << { term: { region_name: filters["region"] } } if filters["region"].present?
             unless filters["sync_eligible"].nil?
               value = ActiveModel::Type::Boolean.new.cast(filters["sync_eligible"])
-              clauses << {term: {sync_eligible: value}}
+              clauses << { term: { sync_eligible: value } }
             end
             clauses
           end

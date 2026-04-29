@@ -47,7 +47,7 @@ module Rails
         end
 
         def headers
-          {"Authorization" => "Bearer #{@access_token}", "Content-Type" => "application/json"}
+          { "Authorization" => "Bearer #{@access_token}", "Content-Type" => "application/json" }
         end
       end
     end

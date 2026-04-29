@@ -9,6 +9,13 @@ require "minitest/reporters"
 require "webmock/minitest"
 require "mocha/minitest"
 require "rails/contact"
+require_relative "../app/models/rails/contact/application_record"
+require_relative "../app/models/rails/contact/contact"
+require_relative "../app/models/rails/contact/contact_email"
+require_relative "../app/models/rails/contact/contact_phone"
+require_relative "../app/models/rails/contact/contact_address"
+require_relative "../app/jobs/rails/contact/application_job"
+require_relative "../app/jobs/rails/contact/index_contact_job"
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
@@ -59,3 +66,14 @@ ActiveRecord::Schema.define do
 end
 
 ActiveJob::Base.queue_adapter = :test
+
+class Minitest::Test
+  def setup
+    Rails::Contact::ContactAddress.delete_all
+    Rails::Contact::ContactPhone.delete_all
+    Rails::Contact::ContactEmail.delete_all
+    Rails::Contact::Contact.delete_all
+    ActiveJob::Base.queue_adapter.enqueued_jobs.clear
+    ActiveJob::Base.queue_adapter.performed_jobs.clear
+  end
+end

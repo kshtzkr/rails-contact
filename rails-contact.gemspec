@@ -3,8 +3,8 @@ require_relative "lib/rails/contact/version"
 Gem::Specification.new do |spec|
   spec.name        = "rails-contact"
   spec.version     = Rails::Contact::VERSION
-  spec.authors     = ["Kshitiz Sinha"]
-  spec.email       = ["kshtzkr@gmail.com"]
+  spec.authors     = [ "Kshitiz Sinha" ]
+  spec.email       = [ "kshtzkr@gmail.com" ]
   spec.homepage    = "https://rubygems.org/gems/rails-contact"
   spec.summary     = "Google-shaped contacts for Rails with search and sync."
   spec.description = "Mountable Rails engine offering contact CRUD, CSV import, Elasticsearch-backed search, and optional capped Google Contacts two-way sync."

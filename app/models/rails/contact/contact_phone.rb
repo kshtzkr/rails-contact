@@ -1,3 +1,5 @@
+require "phonelib"
+
 module Rails
   module Contact
     class ContactPhone < ApplicationRecord

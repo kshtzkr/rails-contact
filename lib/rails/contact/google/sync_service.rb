@@ -8,7 +8,7 @@ module Rails
         end
 
         def sync!
-          Contact.sync_window.find_each do |contact|
+          Rails::Contact::Contact.sync_window.each do |contact|
             sync_contact(contact)
           end
         end
@@ -17,9 +17,9 @@ module Rails
           payload = PayloadMapper.new(contact).to_people_payload
           response = if contact.google_resource_name.present?
                        @client.update_contact(contact.google_resource_name, payload)
-                     else
+          else
                        @client.create_contact(payload)
-                     end
+          end
 
           contact.update!(
             google_resource_name: response["resourceName"] || contact.google_resource_name,
