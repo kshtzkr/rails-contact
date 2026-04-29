@@ -1,0 +1,9 @@
+module Rails
+  module Contact
+    class ContactsController < Rails::Contact::ContactsController
+      layout "application"
+
+      # Override actions here when needed.
+    end
+  end
+end
