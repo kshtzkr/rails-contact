@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.12
+
+- `_google_sync_panel`: render the card whenever `google_sync_ui_on_index`; if `google_sync_enabled` is false, show short instructions instead of hiding the section entirely.
+
 ## 0.1.11
 
 - Default **Google sync panel** back on the engine index via `_google_sync_panel` when `google_sync_enabled` and `google_sync_ui_on_index` (default true). Host apps can override the partial or disable with `google_sync_ui_on_index = false`.

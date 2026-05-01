@@ -1,27 +1,35 @@
-<% if Rails::Contact.configuration.google_sync_enabled && Rails::Contact.configuration.google_sync_ui_on_index %>
+<% if Rails::Contact.configuration.google_sync_ui_on_index %>
   <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm space-y-4">
     <h2 class="text-sm font-semibold text-gray-900">Google Contacts</h2>
 
-    <div>
-      <%= form_with url: google_sync_rolling_window_contacts_path, method: :post, local: true, class: "flex flex-wrap items-center gap-3" do %>
-        <%= submit_tag "Re-sync recent contacts with Google",
-              class: "inline-flex rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700",
-              data: { confirm: "Queue Google sync for the recent contact window? This updates contacts already in Google and creates any that are missing. Runs in the background." } %>
-      <% end %>
-      <p class="mt-2 text-xs text-gray-500">
-        Pushes the most recently updated contacts (up to your configured limit) to Google—new rows and changes to names, emails, phones, etc.
-      </p>
-    </div>
-
-    <% if @google_contacts_pending_sync.to_i.positive? %>
-      <div class="border-t border-gray-100 pt-4">
-        <%= form_with url: google_sync_unsynced_contacts_path, method: :post, local: true, class: "flex flex-wrap items-center gap-3" do %>
-          <%= submit_tag "Sync #{@google_contacts_pending_sync} contact#{'s' if @google_contacts_pending_sync != 1} with no Google link yet (any age)",
-                class: "inline-flex rounded-md border border-emerald-700 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50",
-                data: { confirm: "Queue Google sync for #{@google_contacts_pending_sync} contact(s) that are not linked yet? This runs in the background." } %>
+    <% if Rails::Contact.configuration.google_sync_enabled %>
+      <div>
+        <%= form_with url: google_sync_rolling_window_contacts_path, method: :post, local: true, class: "flex flex-wrap items-center gap-3" do %>
+          <%= submit_tag "Re-sync recent contacts with Google",
+                class: "inline-flex rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700",
+                data: { confirm: "Queue Google sync for the recent contact window? This updates contacts already in Google and creates any that are missing. Runs in the background." } %>
         <% end %>
-        <p class="mt-2 text-xs text-gray-500">For contacts outside the recent window or older imports that never received a Google <code class="rounded bg-gray-100 px-1">resourceName</code>.</p>
+        <p class="mt-2 text-xs text-gray-500">
+          Pushes the most recently updated contacts (up to your configured limit) to Google—new rows and changes to names, emails, phones, etc.
+        </p>
       </div>
+
+      <% if @google_contacts_pending_sync.to_i.positive? %>
+        <div class="border-t border-gray-100 pt-4">
+          <%= form_with url: google_sync_unsynced_contacts_path, method: :post, local: true, class: "flex flex-wrap items-center gap-3" do %>
+            <%= submit_tag "Sync #{@google_contacts_pending_sync} contact#{'s' if @google_contacts_pending_sync != 1} with no Google link yet (any age)",
+                  class: "inline-flex rounded-md border border-emerald-700 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50",
+                  data: { confirm: "Queue Google sync for #{@google_contacts_pending_sync} contact(s) that are not linked yet? This runs in the background." } %>
+          <% end %>
+          <p class="mt-2 text-xs text-gray-500">For contacts outside the recent window or older imports that never received a Google <code class="rounded bg-gray-100 px-1">resourceName</code>.</p>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="text-sm text-gray-600">
+        Google sync is turned off. Set environment variable
+        <code class="rounded bg-gray-100 px-1">RAILS_CONTACT_GOOGLE_SYNC_ENABLED=true</code>
+        (and OAuth client + token path in <code class="rounded bg-gray-100 px-1">rails_contact</code> initializer), then restart the server.
+      </p>
     <% end %>
   </div>
 <% end %>
