@@ -15,10 +15,10 @@ module Rails
         contact.phones.create!(value: "+919999999999", e164: "+919999999999", primary: true)
 
         backend = Search::Backends::Elasticsearch.new(client: FailingClient.new)
-        results = backend.search("Aruna", {})
+        result = backend.search("Aruna", {}, page: 1, per_page: 25)
 
-        assert_equal 1, results.size
-        assert_equal "Aruna", results.first.given_name
+        assert_equal 1, result.records.size
+        assert_equal "Aruna", result.records.first.given_name
       end
     end
   end

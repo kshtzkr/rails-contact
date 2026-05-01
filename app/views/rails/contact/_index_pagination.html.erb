@@ -1,0 +1,25 @@
+<% if defined?(@total_count) && @total_count.to_i > 0 %>
+  <div class="flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-sm text-gray-600">
+      <% start_i = (@page - 1) * @per_page + 1 %>
+      <% end_i = [ @page * @per_page, @total_count ].min %>
+      Showing <span class="font-medium text-gray-900"><%= start_i %>–<%= end_i %></span>
+      of <span class="font-medium text-gray-900"><%= number_with_delimiter(@total_count) %></span>
+      <% if @per_page.present? && @per_page > 0 %>
+        <span class="text-gray-500">(<%= @per_page %> per page)</span>
+      <% end %>
+    </p>
+    <% if defined?(@total_pages) && @total_pages > 1 %>
+      <div class="flex flex-wrap items-center gap-2">
+        <% qp = request.query_parameters.except(:page, :action, :controller) %>
+        <% if @page > 1 %>
+          <%= link_to "Previous", url_for(qp.merge(page: @page - 1)), class: "inline-flex rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+        <% end %>
+        <span class="text-sm text-gray-600">Page <%= @page %> / <%= @total_pages %></span>
+        <% if @page < @total_pages %>
+          <%= link_to "Next", url_for(qp.merge(page: @page + 1)), class: "inline-flex rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

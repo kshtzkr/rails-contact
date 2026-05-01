@@ -23,13 +23,16 @@ module Rails
             @client = client || self.class.default_client
           end
 
-          def search(query, filters)
-            response = @client.search(index: INDEX, body: search_body(query, filters))
-            ids = response.fetch("hits", {}).fetch("hits", []).map { |doc| doc["_id"] }
+          def search(query, filters, page:, per_page:)
+            response = @client.search(index: INDEX, body: search_body(query, filters, page: page, per_page: per_page))
+            hits = response.fetch("hits", {})
+            ids = hits.fetch("hits", []).map { |doc| doc["_id"] }
+            total_count = extract_total_hits(hits["total"])
             records_by_id = Contact.where(id: ids).index_by { |record| record.id.to_s }
-            ids.filter_map { |id| records_by_id[id.to_s] }
+            records = ids.filter_map { |id| records_by_id[id.to_s] }
+            Search::Result.new(records: records, total_count: total_count, page: page, per_page: per_page)
           rescue StandardError
-            Search::Backends::Database.new.search(query, filters)
+            Search::Backends::Database.new.search(query, filters, page: page, per_page: per_page)
           end
 
           def upsert(contact)
@@ -81,9 +84,12 @@ module Rails
             }
           end
 
-          def search_body(query, filters)
+          def search_body(query, filters, page:, per_page:)
+            from = (page - 1) * per_page
             {
-              size: Rails::Contact.configuration.default_per_page,
+              from: from,
+              size: per_page,
+              track_total_hits: true,
               sort: [ { updated_at: { order: "desc" } }, { id: { order: "desc" } } ],
               query: {
                 bool: {
@@ -92,6 +98,12 @@ module Rails
                 }
               }
             }
+          end
+
+          def extract_total_hits(raw)
+            return 0 if raw.nil?
+
+            raw.is_a?(Hash) ? raw.fetch("value", 0).to_i : raw.to_i
           end
 
           def search_clause(query)

@@ -10,8 +10,28 @@ module Rails
 
       def index
         @query = params[:q].to_s.strip
-        @contacts = Search::Query.new(@query, filters: normalized_filters(filter_params)).call
+        result = Search::Query.new(
+          @query,
+          filters: normalized_filters(filter_params),
+          page: params[:page]
+        ).call
+        @contacts = result.records
+        @total_count = result.total_count
+        @page = result.page
+        @per_page = result.per_page
+        @total_pages = result.total_pages
+        @google_contacts_pending_sync = google_pending_sync_count
         render "rails/contact/index"
+      end
+
+      def google_sync_unsynced
+        unless Rails::Contact.configuration.google_sync_enabled
+          redirect_to contacts_path, alert: "Google Contacts sync is disabled."
+          return
+        end
+
+        GoogleSyncUnsyncedJob.perform_later
+        redirect_to contacts_path, notice: "Google sync has been queued for contacts not yet linked."
       end
 
       def show
@@ -97,6 +117,12 @@ module Rails
 
       def filter_params
         params.permit(:city, :region, :sync_eligible, :starred)
+      end
+
+      def google_pending_sync_count
+        return 0 unless Rails::Contact.configuration.google_sync_enabled
+
+        Contact.where("google_resource_name IS NULL OR google_resource_name = ?", "").count
       end
 
       def enqueue_index(contact_id)

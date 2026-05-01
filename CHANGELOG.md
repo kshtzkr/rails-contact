@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8
+
+- Contacts index: paginated search (total count, previous/next, page indicator) with Elasticsearch and database backends.
+- `POST /google_sync_unsynced` and **Sync … not yet in Google** button when sync is enabled; `GoogleSyncUnsyncedJob` runs `SyncService#sync_unsynced!` for contacts with no `google_resource_name`.
+
 ## 0.1.7
 
 - Google People API: `updateContact` sends required `updatePersonFields`; update payloads include `resourceName` and `etag`; sync preloads emails, phones, and addresses.
