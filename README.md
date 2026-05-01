@@ -134,6 +134,22 @@ Rails::Contact.configure do |config|
 end
 ```
 
+### Google sync UI: gem default vs host override
+
+**Recommendation:** keep the **default panel in the gem** so every app gets working buttons when `google_sync_enabled` is true. You avoid copy-paste and stay aligned with new endpoints.
+
+- The index template renders `rails/contact/_google_sync_panel` when `google_sync_ui_on_index` is **true** (default).
+- **Customize without forking the engine:** add `app/views/rails/contact/_google_sync_panel.html.erb` in the host app; Rails resolves that file instead of the gem’s partial.
+- **Hide the default panel:** set `config.google_sync_ui_on_index = false` and render your own UI anywhere (same `POST` targets below).
+- **Custom index only:** override `rails/contact/index` and `<%= render "rails/contact/google_sync_panel" %>` wherever it fits (e.g. after a CSV upload section).
+
+Endpoints (used by the default partial):
+
+- `google_sync_rolling_window_contacts_path` — `GoogleSyncJob` (rolling window re-sync).
+- `google_sync_unsynced_contacts_path` — `GoogleSyncUnsyncedJob` (contacts with no `google_resource_name`).
+
+`ContactsController#index` sets `@google_contacts_pending_sync` when sync is enabled.
+
 ---
 
 ## Rake tasks

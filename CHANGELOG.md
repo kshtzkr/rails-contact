@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.11
+
+- Default **Google sync panel** back on the engine index via `_google_sync_panel` when `google_sync_enabled` and `google_sync_ui_on_index` (default true). Host apps can override the partial or disable with `google_sync_ui_on_index = false`.
+
+## 0.1.10
+
+- Short-lived: engine index omitted the Google panel (use **0.1.11** instead).
+
+## 0.1.9
+
+- `POST /google_sync_rolling_window` → `ContactsController#google_sync_rolling_window` → `GoogleSyncJob` (re-sync rolling window: creates + updates).
+
 ## 0.1.8
 
 - Contacts index: paginated search (total count, previous/next, page indicator) with Elasticsearch and database backends.

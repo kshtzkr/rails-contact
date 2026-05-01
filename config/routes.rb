@@ -2,6 +2,7 @@ Rails::Contact::Engine.routes.draw do
   post "/bulk_destroy", to: "contacts#bulk_destroy", as: :bulk_destroy_contacts
   post "/merge", to: "contacts#merge", as: :merge_contacts
   post "/google_sync_unsynced", to: "contacts#google_sync_unsynced", as: :google_sync_unsynced_contacts
+  post "/google_sync_rolling_window", to: "contacts#google_sync_rolling_window", as: :google_sync_rolling_window_contacts
   get "/", to: "contacts#index", as: :contacts
   get "/new", to: "contacts#new", as: :new_contact
   post "/", to: "contacts#create"

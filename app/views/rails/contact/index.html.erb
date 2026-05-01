@@ -26,21 +26,7 @@
     <% end %>
   </div>
 
-  <% if Rails::Contact.configuration.google_sync_enabled %>
-    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <h2 class="mb-2 text-sm font-semibold text-gray-900">Google Contacts</h2>
-      <% if @google_contacts_pending_sync.to_i.positive? %>
-        <%= form_with url: google_sync_unsynced_contacts_path, method: :post, local: true, class: "flex flex-wrap items-center gap-3" do %>
-          <%= submit_tag "Sync #{@google_contacts_pending_sync} contact#{'s' if @google_contacts_pending_sync != 1} not yet in Google",
-                class: "inline-flex rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700",
-                data: { confirm: "Queue Google sync for #{@google_contacts_pending_sync} contact(s)? This runs in the background." } %>
-        <% end %>
-        <p class="mt-2 text-xs text-gray-500">Creates or updates People entries for contacts with no Google link yet. Already-linked contacts are unchanged.</p>
-      <% else %>
-        <p class="text-sm text-gray-600">Every contact in the database is already linked to Google (or there are no contacts).</p>
-      <% end %>
-    </div>
-  <% end %>
+  <%= render "rails/contact/google_sync_panel" %>
 
   <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
     <%= form_with url: bulk_destroy_contacts_path, method: :post, local: true, class: "inline-flex items-center gap-2" do |f| %>

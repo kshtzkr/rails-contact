@@ -4,6 +4,8 @@ Rails::Contact.configure do |config|
   config.elasticsearch_url = ENV.fetch("ELASTICSEARCH_URL", "http://127.0.0.1:9200")
 
   config.google_sync_enabled = ENV.fetch("RAILS_CONTACT_GOOGLE_SYNC_ENABLED", "false") == "true"
+  # When true (default), contacts index renders the gem’s Google sync panel; set false to supply your own UI.
+  # config.google_sync_ui_on_index = false
   config.google_max_contacts = 25_000
   config.rolling_window_sort = :updated_at
 

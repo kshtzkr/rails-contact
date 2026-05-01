@@ -2,7 +2,7 @@ module Rails
   module Contact
     class Configuration
       attr_accessor :contact_class_name, :elasticsearch_url, :search_backend,
-                    :google_sync_enabled, :google_max_contacts, :rolling_window_sort,
+                    :google_sync_enabled, :google_sync_ui_on_index, :google_max_contacts, :rolling_window_sort,
                     :google_client_id, :google_client_secret, :google_redirect_uri,
                     :google_token_path, :reset_index_on_boot, :default_per_page,
                     :inherit_host_layout,
@@ -13,6 +13,8 @@ module Rails
         @elasticsearch_url = ENV.fetch("ELASTICSEARCH_URL", "http://127.0.0.1:9200")
         @search_backend = :elasticsearch
         @google_sync_enabled = false
+        # When true with google_sync_enabled, the default index renders _google_sync_panel (host can override that partial).
+        @google_sync_ui_on_index = true
         @google_max_contacts = 25_000
         @rolling_window_sort = :updated_at
         @google_client_id = ENV["GOOGLE_CLIENT_ID"]

@@ -34,6 +34,17 @@ module Rails
         redirect_to contacts_path, notice: "Google sync has been queued for contacts not yet linked."
       end
 
+      def google_sync_rolling_window
+        unless Rails::Contact.configuration.google_sync_enabled
+          redirect_to contacts_path, alert: "Google Contacts sync is disabled."
+          return
+        end
+
+        GoogleSyncJob.perform_later
+        redirect_to contacts_path,
+                    notice: "Google re-sync has been queued for contacts in the recent window (creates and updates)."
+      end
+
       def show
         render "rails/contact/show"
       end
