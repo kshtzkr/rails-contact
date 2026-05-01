@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.7
+
+- Google People API: `updateContact` sends required `updatePersonFields`; update payloads include `resourceName` and `etag`; sync preloads emails, phones, and addresses.
+- Google: optional `google_contact_family_name_suffix` (and env `RAILS_CONTACT_GOOGLE_CONTACT_FAMILY_NAME_SUFFIX`) for family name in sync payloads only.
+- Google: payload mapper skips blank emails/phones, omits empty association arrays, biography uses `TEXT_PLAIN` when present.
+- Elasticsearch search backend reuses one `Elasticsearch::Client` per process (fewer product-check warnings).
+- Remove CSV import from the gem (keep imports in the host application). Drops `rails_contact:import_csv` and `Csv::ImportService`.
+- Engine registers stylesheet/javascript paths for Propshaft.
+
 ## 0.1.5
 
 - Scope engine stylesheet to contacts content only (`.rails-contact-page`) so host app layout/header styling is not overridden.

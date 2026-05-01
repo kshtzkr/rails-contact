@@ -13,6 +13,11 @@ module Rails
         app.config.filter_parameters += %i[google_access_token google_refresh_token authorization]
       end
 
+      initializer "rails_contact.assets" do |app|
+        app.config.assets.paths << root.join("app/assets/stylesheets")
+        app.config.assets.paths << root.join("app/assets/javascripts")
+      end
+
       rake_tasks do
         load File.expand_path("../../tasks/rails/contact_tasks.rake", __dir__)
       end

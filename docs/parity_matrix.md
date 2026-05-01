@@ -46,7 +46,7 @@ This matrix tracks feature parity for `rails-contact` versus Google Contacts.
 
 | Capability | Google Contacts | rails-contact Target | Priority | Acceptance Criteria |
 |---|---|---|---|---|
-| CSV import | Flexible column import | Same | P0 | Mapping profile handles eq.csv fields |
+| CSV import | Flexible column import | Host app | P0 | Engine stays format-agnostic; host maps columns to models |
 | CSV export | Download contacts | Same | P1 | Export with stable headers and escaping |
 | Google sync | People API sync | Similar | P0/P1 | Two-way sync for rolling window with conflict policy |
 | Conflict resolution | Last write + ETag semantics | Same policy | P1 | Deterministic merge outcomes and tests |

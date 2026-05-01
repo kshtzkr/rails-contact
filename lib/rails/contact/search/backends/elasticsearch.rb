@@ -5,8 +5,22 @@ module Rails
         class Elasticsearch
           INDEX = "rails_contact_contacts".freeze
 
+          class << self
+            def default_client
+              @default_client ||= ::Elasticsearch::Client.new(url: Rails::Contact.configuration.elasticsearch_url)
+            end
+
+            def default_client=(client)
+              @default_client = client
+            end
+
+            def clear_default_client!
+              @default_client = nil
+            end
+          end
+
           def initialize(client: nil)
-            @client = client || ::Elasticsearch::Client.new(url: Rails::Contact.configuration.elasticsearch_url)
+            @client = client || self.class.default_client
           end
 
           def search(query, filters)

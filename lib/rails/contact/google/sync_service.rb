@@ -8,7 +8,7 @@ module Rails
         end
 
         def sync!
-          Rails::Contact::Contact.sync_window.each do |contact|
+          Rails::Contact::Contact.sync_window.includes(:emails, :phones, :addresses).each do |contact|
             sync_contact(contact)
           end
         end
@@ -16,7 +16,11 @@ module Rails
         def sync_contact(contact)
           payload = PayloadMapper.new(contact).to_people_payload
           response = if contact.google_resource_name.present?
-                       @client.update_contact(contact.google_resource_name, payload)
+                       body = payload.merge(
+                         resourceName: contact.google_resource_name,
+                         etag: contact.google_etag
+                       ).compact
+                       @client.update_contact(contact.google_resource_name, body)
           else
                        @client.create_contact(payload)
           end

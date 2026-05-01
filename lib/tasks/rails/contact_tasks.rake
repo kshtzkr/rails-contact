@@ -20,12 +20,4 @@ namespace :rails_contact do
     puts "Google sync completed"
   end
 
-  desc "Import contacts from CSV path (CSV_PATH=/path/file.csv)"
-  task import_csv: :environment do
-    path = ENV["CSV_PATH"]
-    raise "Set CSV_PATH env var" if path.blank?
-
-    count = Rails::Contact::Csv::ImportService.new(path: path).import!
-    puts "Imported #{count} rows"
-  end
 end

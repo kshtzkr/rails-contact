@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email = [ "kshtzkr@gmail.com" ]
   spec.homepage = "https://github.com/kshtzkr/rails-contact"
   spec.summary = "Google-shaped contacts for Rails with search and sync."
-  spec.description = "Mountable Rails engine offering contact CRUD, CSV import, Elasticsearch-backed search, and optional capped Google Contacts two-way sync."
+  spec.description = "Mountable Rails engine offering contact CRUD, Elasticsearch-backed search, and optional capped Google Contacts two-way sync."
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
 

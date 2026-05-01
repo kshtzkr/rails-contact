@@ -9,7 +9,7 @@ It provides:
 - labels/tags
 - dynamic add/remove nested rows
 - Elasticsearch-backed search with DB fallback
-- CSV import and Google sync scaffolding
+- Google sync scaffolding
 - merge and bulk-delete operations
 - Devise-style override generators
 
@@ -128,6 +128,8 @@ Rails::Contact.configure do |config|
   config.google_sync_enabled = false
   config.google_max_contacts = 25_000
   config.rolling_window_sort = :updated_at
+  # Optional: appended to familyName in Google People API payloads only (blank = unchanged).
+  # config.google_contact_family_name_suffix = "_by_vendor"
   config.default_per_page = 25
 end
 ```
@@ -139,7 +141,6 @@ end
 ```bash
 rake rails_contact:reindex
 rake rails_contact:sync_google
-rake rails_contact:import_csv CSV_PATH=/absolute/path/to/eq.csv
 ```
 
 ---

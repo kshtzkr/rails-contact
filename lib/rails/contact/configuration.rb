@@ -5,7 +5,8 @@ module Rails
                     :google_sync_enabled, :google_max_contacts, :rolling_window_sort,
                     :google_client_id, :google_client_secret, :google_redirect_uri,
                     :google_token_path, :reset_index_on_boot, :default_per_page,
-                    :inherit_host_layout
+                    :inherit_host_layout,
+                    :google_contact_family_name_suffix
 
       def initialize
         @contact_class_name = "Rails::Contact::Contact"
@@ -18,6 +19,8 @@ module Rails
         @google_client_secret = ENV["GOOGLE_CLIENT_SECRET"]
         @google_redirect_uri = ENV["GOOGLE_REDIRECT_URI"]
         @google_token_path = ENV.fetch("RAILS_CONTACT_GOOGLE_TOKEN_PATH", "tmp/rails_contact_google_token.json")
+        # Optional: appended to familyName in Google People payloads only (not stored on Contact). Blank = disabled.
+        @google_contact_family_name_suffix = ENV["RAILS_CONTACT_GOOGLE_CONTACT_FAMILY_NAME_SUFFIX"]&.presence
         @reset_index_on_boot = false
         @default_per_page = 25
         # When true (default), engine pages use the host app +layout+ named +application+ so
