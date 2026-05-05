@@ -19,6 +19,22 @@
         <%= f.label :region, "Interested Region", class: "mb-1 block text-sm font-medium text-gray-700" %>
         <%= f.text_field :region, value: params[:region], class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
       </div>
+      <div>
+        <%= f.label :travel_date_start, "Travel Start", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :travel_date_start, value: params[:travel_date_start], class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :travel_date_end, "Travel End", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :travel_date_end, value: params[:travel_date_end], class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :contact_created_at_start, "Created Start", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :contact_created_at_start, value: params[:contact_created_at_start], class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :contact_created_at_end, "Created End", class: "mb-1 block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :contact_created_at_end, value: params[:contact_created_at_end], class: "w-full rounded-md border border-gray-300 px-3 py-2 text-sm" %>
+      </div>
       <div class="flex gap-2">
         <%= f.submit "Filter", class: "inline-flex rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700" %>
         <%= link_to "Reset", contacts_path, class: "inline-flex rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" %>

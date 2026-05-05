@@ -41,6 +41,27 @@ module Rails
             if filters["sync_eligible"].present?
               scoped = scoped.where(sync_eligible: ActiveModel::Type::Boolean.new.cast(filters["sync_eligible"]))
             end
+
+            if filters["travel_date_start"].present?
+              scoped = scoped.where("metadata->>'travel_date' >= ?", filters["travel_date_start"])
+            end
+
+            if filters["travel_date_end"].present?
+              scoped = scoped.where("metadata->>'travel_date' <= ?", filters["travel_date_end"])
+            end
+
+            if filters["contact_created_at_start"].present?
+              scoped = scoped.where("metadata->>'contact_created_at' >= ?", filters["contact_created_at_start"])
+            end
+
+            if filters["contact_created_at_end"].present?
+              scoped = scoped.where("metadata->>'contact_created_at' <= ?", filters["contact_created_at_end"])
+            end
+
+            if filters["csv_import_id"].present?
+              scoped = scoped.where("metadata->>'csv_import_id' = ?", filters["csv_import_id"].to_s)
+            end
+
             scoped
           end
         end

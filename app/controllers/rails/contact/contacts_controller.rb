@@ -127,7 +127,7 @@ module Rails
       end
 
       def filter_params
-        params.permit(:city, :region, :sync_eligible, :starred)
+        params.permit(:city, :region, :sync_eligible, :starred, :travel_date_start, :travel_date_end, :contact_created_at_start, :contact_created_at_end, :csv_import_id)
       end
 
       def google_pending_sync_count

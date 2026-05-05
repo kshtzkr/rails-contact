@@ -22,5 +22,8 @@ class CreateRailsContactContacts < ActiveRecord::Migration[7.1]
     add_index :rails_contact_contacts, :updated_at
     add_index :rails_contact_contacts, :sync_eligible
     add_index :rails_contact_contacts, :google_resource_name, unique: true
+    add_index :rails_contact_contacts, "(metadata->>'travel_date')", name: 'idx_contacts_travel_date'
+    add_index :rails_contact_contacts, "(metadata->>'contact_created_at')", name: 'idx_contacts_contact_created_at'
+    add_index :rails_contact_contacts, "(metadata->>'csv_import_id')", name: 'idx_contacts_csv_import_id'
   end
 end
