@@ -19,5 +19,4 @@ namespace :rails_contact do
     Rails::Contact::GoogleSyncJob.perform_now
     puts "Google sync completed"
   end
-
 end
