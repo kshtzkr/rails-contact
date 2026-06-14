@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.14
+
+- Contacts index filters: **`region` and `csv_import_id` are now multi-select**. `filter_params` permits `region: []` / `csv_import_id: []`, strips the hidden blank a `<select multiple>` submits, and coerces a legacy scalar (`?region=Europe`) to a one-element array. The database backend matches `metadata->>'csv_import_id' IN (...)` across the selected imports (a single id behaves exactly as before); `region` was already array-safe via `where(region_name:)`.
+- Database backend: **search query is now sanitized internally** — LIKE metacharacters (`% _ \`) are escaped and input is capped at 200 chars, so a user typing `%` can no longer widen the match to every row. Host apps no longer need to wrap `search` to be safe.
+
 ## 0.1.12
 
 - `_google_sync_panel`: render the card whenever `google_sync_ui_on_index`; if `google_sync_enabled` is false, show short instructions instead of hiding the section entirely.

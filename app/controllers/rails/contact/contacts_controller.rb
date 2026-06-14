@@ -127,7 +127,37 @@ module Rails
       end
 
       def filter_params
-        params.permit(:city, :region, :sync_eligible, :starred, :travel_date_start, :travel_date_end, :contact_created_at_start, :contact_created_at_end, :csv_import_id)
+        permitted = params.permit(
+          :city,
+          :sync_eligible,
+          :starred,
+          :travel_date_start,
+          :travel_date_end,
+          :contact_created_at_start,
+          :contact_created_at_end,
+          region: [],
+          csv_import_id: []
+        )
+
+        normalize_multi_select!(permitted, :region)
+        normalize_multi_select!(permitted, :csv_import_id)
+        permitted
+      end
+
+      # region and csv_import_id are multi-select filters: a <select multiple>
+      # submits param[] (an array) plus a hidden param[]="" that Rails always
+      # sends, so the blank must be stripped — otherwise IN ('', 'x') matches
+      # every blank-valued row. Legacy bookmarks may still send a scalar
+      # (?region=Europe); coerce those to a one-element array so the search
+      # backend only ever sees an array (or no key at all).
+      def normalize_multi_select!(permitted, key)
+        if permitted[key].blank? && params[key].is_a?(String) && params[key].present?
+          permitted[key] = [ params[key] ]
+        end
+        return unless permitted[key].is_a?(Array)
+
+        permitted[key] = permitted[key].reject(&:blank?)
+        permitted.delete(key) if permitted[key].empty?
       end
 
       def google_pending_sync_count

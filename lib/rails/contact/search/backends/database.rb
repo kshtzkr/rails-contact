@@ -3,7 +3,12 @@ module Rails
     module Search
       module Backends
         class Database
+          # Cap user input so the LIKE pattern stays bounded; 200 chars covers
+          # any realistic name/email/phone substring.
+          MAX_QUERY_LENGTH = 200
+
           def search(query, filters, page:, per_page:)
+            query = sanitize_query(query)
             offset = (page - 1) * per_page
             scope = Contact.includes(:emails, :phones, :labels).recent_first
             scope = apply_filters(scope, filters)
@@ -33,6 +38,16 @@ module Rails
 
           private
 
+          # Escape LIKE metacharacters (% _ \) so a user typing "%" can't widen
+          # the match to every row, and cap length to keep the pattern bounded.
+          # The backend builds raw "%…%" LIKE patterns, so this guard belongs
+          # here — host apps should not have to wrap search() to stay safe.
+          def sanitize_query(query)
+            return query if query.blank?
+
+            ActiveRecord::Base.sanitize_sql_like(query.to_s[0, MAX_QUERY_LENGTH])
+          end
+
           def apply_filters(scope, filters)
             scoped = scope
             scoped = scoped.where(current_city: filters["city"]) if filters["city"].present?
@@ -58,8 +73,13 @@ module Rails
               scoped = scoped.where("metadata->>'contact_created_at' <= ?", filters["contact_created_at_end"])
             end
 
+            # csv_import_id is a multi-select filter: it may be a single id or an
+            # array of ids. region above is already array-safe via where(region_name:),
+            # but this JSON-extraction predicate needs an explicit IN. A single id
+            # yields IN ('5'), identical to the old = '5'.
             if filters["csv_import_id"].present?
-              scoped = scoped.where("metadata->>'csv_import_id' = ?", filters["csv_import_id"].to_s)
+              ids = Array(filters["csv_import_id"]).map(&:to_s).reject(&:blank?)
+              scoped = scoped.where("metadata->>'csv_import_id' IN (?)", ids) if ids.any?
             end
 
             scoped
