@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.14
+
+- Contacts index filters: **`region` and `csv_import_id` are now multi-select**. `filter_params` permits `region: []` / `csv_import_id: []`, strips the hidden blank a `<select multiple>` submits, and coerces a legacy scalar (`?region=Europe`) to a one-element array. The database backend matches `metadata->>'csv_import_id' IN (...)` across the selected imports (a single id behaves exactly as before); `region` was already array-safe via `where(region_name:)`.
+
 ## 0.1.12
 
 - `_google_sync_panel`: render the card whenever `google_sync_ui_on_index`; if `google_sync_enabled` is false, show short instructions instead of hiding the section entirely.

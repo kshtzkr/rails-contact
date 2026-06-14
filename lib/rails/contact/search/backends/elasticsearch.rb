@@ -120,8 +120,8 @@ module Rails
 
           def filter_clauses(filters)
             clauses = []
-            clauses << { term: { current_city: filters["city"] } } if filters["city"].present?
-            clauses << { term: { region_name: filters["region"] } } if filters["region"].present?
+            clauses << match_clause(:current_city, filters["city"]) if filters["city"].present?
+            clauses << match_clause(:region_name, filters["region"]) if filters["region"].present?
             unless filters["starred"].nil?
               starred_value = ActiveModel::Type::Boolean.new.cast(filters["starred"])
               clauses << { term: { starred: starred_value } }
@@ -131,6 +131,12 @@ module Rails
               clauses << { term: { sync_eligible: value } }
             end
             clauses
+          end
+
+          # city and region are multi-select filters: an array uses a `terms`
+          # clause (match any), a single value keeps the scalar `term` clause.
+          def match_clause(field, value)
+            value.is_a?(Array) ? { terms: { field => value } } : { term: { field => value } }
           end
 
           def document_for(contact)

@@ -58,8 +58,13 @@ module Rails
               scoped = scoped.where("metadata->>'contact_created_at' <= ?", filters["contact_created_at_end"])
             end
 
+            # csv_import_id is a multi-select filter: it may be a single id or an
+            # array of ids. region above is already array-safe via where(region_name:),
+            # but this JSON-extraction predicate needs an explicit IN. A single id
+            # yields IN ('5'), identical to the old = '5'.
             if filters["csv_import_id"].present?
-              scoped = scoped.where("metadata->>'csv_import_id' = ?", filters["csv_import_id"].to_s)
+              ids = Array(filters["csv_import_id"]).map(&:to_s).reject(&:blank?)
+              scoped = scoped.where("metadata->>'csv_import_id' IN (?)", ids) if ids.any?
             end
 
             scoped
