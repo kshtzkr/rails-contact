@@ -3,7 +3,12 @@ module Rails
     module Search
       module Backends
         class Database
+          # Cap user input so the LIKE pattern stays bounded; 200 chars covers
+          # any realistic name/email/phone substring.
+          MAX_QUERY_LENGTH = 200
+
           def search(query, filters, page:, per_page:)
+            query = sanitize_query(query)
             offset = (page - 1) * per_page
             scope = Contact.includes(:emails, :phones, :labels).recent_first
             scope = apply_filters(scope, filters)
@@ -32,6 +37,16 @@ module Rails
           end
 
           private
+
+          # Escape LIKE metacharacters (% _ \) so a user typing "%" can't widen
+          # the match to every row, and cap length to keep the pattern bounded.
+          # The backend builds raw "%…%" LIKE patterns, so this guard belongs
+          # here — host apps should not have to wrap search() to stay safe.
+          def sanitize_query(query)
+            return query if query.blank?
+
+            ActiveRecord::Base.sanitize_sql_like(query.to_s[0, MAX_QUERY_LENGTH])
+          end
 
           def apply_filters(scope, filters)
             scoped = scope

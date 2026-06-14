@@ -28,4 +28,22 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
       expect(records("csv_import_id" => [ "" ])).to match_array([ alice, bob, carol ])
     end
   end
+
+  describe "query sanitization" do
+    def search_for(query)
+      described_class.new.search(query, {}, page: 1, per_page: 25).records
+    end
+
+    it "treats % as a literal, not a match-everything wildcard" do
+      expect(search_for("%")).to be_empty
+    end
+
+    it "still matches a real substring" do
+      expect(search_for("Ali")).to include(alice)
+    end
+
+    it "does not blow up on pathologically long input" do
+      expect { search_for("a" * 1000) }.not_to raise_error
+    end
+  end
 end
