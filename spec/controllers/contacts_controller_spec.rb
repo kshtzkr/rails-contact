@@ -29,6 +29,45 @@ RSpec.describe Rails::Contact::ContactsController do
     end
   end
 
+  describe "configured metadata filter params" do
+    around do |example|
+      config = Rails::Contact.configuration
+      original_filters = config.metadata_filters
+      original_sorts = config.metadata_sorts
+      config.metadata_filters = {
+        "tier" => { key: "quality_tier", type: :values, allowed: %w[hot warm] },
+        "min_pax" => { key: "pax", type: :min_integer }
+      }
+      config.metadata_sorts = { "score" => { key: "score" } }
+      example.run
+    ensure
+      config.metadata_filters = original_filters
+      config.metadata_sorts = original_sorts
+    end
+
+    it "permits configured array, scalar and sort params" do
+      controller.params = ActionController::Parameters.new(
+        tier: [ "hot" ], min_pax: "4", sort: "score", unrelated: "x"
+      )
+      permitted = controller.send(:filter_params)
+      expect(permitted.to_h).to eq({ "tier" => [ "hot" ], "min_pax" => "4", "sort" => "score" })
+    end
+
+    it "normalizes configured multi-selects like region (scalar coercion + blank strip)" do
+      controller.params = ActionController::Parameters.new(tier: "warm")
+      expect(controller.send(:filter_params).to_h).to eq({ "tier" => [ "warm" ] })
+
+      controller.params = ActionController::Parameters.new(tier: [ "" ])
+      expect(controller.send(:filter_params).to_h).to eq({})
+    end
+
+    it "does not permit sort when no metadata sorts are configured" do
+      Rails::Contact.configuration.metadata_sorts = {}
+      controller.params = ActionController::Parameters.new(sort: "score")
+      expect(controller.send(:filter_params).to_h).to eq({})
+    end
+  end
+
   describe "association defaults" do
     it "builds default nested associations" do
       contact = Rails::Contact::Contact.new(given_name: "X")

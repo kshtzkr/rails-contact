@@ -7,8 +7,18 @@ module Rails
           # any realistic name/email/phone substring.
           MAX_QUERY_LENGTH = 200
 
+          # Configured metadata keys are interpolated into SQL fragments, so
+          # they must be plain identifiers. This is a foot-gun guard for host
+          # developers, not a user-input path — params never reach the key.
+          METADATA_KEY_FORMAT = /\A[a-zA-Z0-9_]+\z/
+
           def search(query, filters, page:, per_page:)
             query = sanitize_query(query)
+            # Metadata sort cannot combine with free-text search: the search
+            # branch below runs SELECT DISTINCT, and PostgreSQL rejects ORDER BY
+            # expressions that are not in the select list. Searching means
+            # hunting a specific contact anyway, so q results keep recency order.
+            filters = filters.except("sort") if query.present?
             offset = (page - 1) * per_page
             scope = Contact.includes(:emails, :phones, :labels).recent_first
             scope = apply_filters(scope, filters)
@@ -82,7 +92,102 @@ module Rails
               scoped = scoped.where("metadata->>'csv_import_id' IN (?)", ids) if ids.any?
             end
 
+            scoped = apply_metadata_filters(scoped, filters)
+            apply_metadata_sort(scoped, filters["sort"])
+          end
+
+          # Host-configured filters over Contact#metadata — see
+          # Configuration#metadata_filters for the declaration format. Every
+          # stored value came from user data (CSV imports, forms), so numeric
+          # comparisons never cast blindly: non-numeric values are filtered
+          # out by a guard instead of raising.
+          def apply_metadata_filters(scoped, filters)
+            Rails::Contact.configuration.metadata_filters.each do |param, config|
+              value = filters[param.to_s]
+              next if value.blank?
+
+              key = metadata_key!(config.fetch(:key))
+              scoped = case config.fetch(:type)
+              when :values      then apply_values_filter(scoped, key, value, config[:allowed])
+              when :min_integer then apply_min_filter(scoped, key, value, decimals: false)
+              when :min_numeric then apply_min_filter(scoped, key, value, decimals: true)
+              when :tag         then apply_tag_filter(scoped, key, value, config.fetch(:tag))
+              else
+                raise ArgumentError, "unknown metadata filter type #{config[:type].inspect} for #{param.inspect}"
+              end
+            end
             scoped
+          end
+
+          def apply_values_filter(scoped, key, value, allowed)
+            values = Array(value).map(&:to_s).reject(&:blank?)
+            values &= allowed.map(&:to_s) if allowed
+            return scoped if values.empty?
+
+            scoped.where("metadata->>'#{key}' IN (?)", values)
+          end
+
+          def apply_min_filter(scoped, key, value, decimals:)
+            floor = decimals ? value.to_f : value.to_i
+            return scoped unless floor.positive?
+
+            if postgres?(scoped)
+              # {0,1} instead of the ? quantifier: Rails' bind sanitizer counts
+              # every literal ? in the fragment as a placeholder, even inside a
+              # quoted regex.
+              pattern = decimals ? "^[0-9]+(\\.[0-9]+){0,1}$" : "^[0-9]+$"
+              cast = decimals ? "numeric" : "int"
+              scoped.where("metadata->>'#{key}' ~ '#{pattern}' AND (metadata->>'#{key}')::#{cast} >= ?", floor)
+            else
+              # SQLite (test harness): CAST never raises — junk casts to 0,
+              # which a positive floor excludes on its own.
+              scoped.where("CAST(metadata->>'#{key}' AS REAL) >= ?", floor)
+            end
+          end
+
+          def apply_tag_filter(scoped, key, value, tag)
+            return scoped unless ActiveModel::Type::Boolean.new.cast(value)
+
+            if postgres?(scoped)
+              scoped.where("metadata->'#{key}' @> ?", [ tag ].to_json)
+            else
+              scoped.where(
+                "EXISTS (SELECT 1 FROM json_each(rails_contact_contacts.metadata, '$.#{key}') WHERE json_each.value = ?)",
+                tag
+              )
+            end
+          end
+
+          # Descending sort over a numeric metadata key; rows with a
+          # non-numeric or missing value sink to the bottom, recency breaks
+          # ties. Only sorts declared in Configuration#metadata_sorts apply —
+          # an unknown ?sort= value is ignored.
+          def apply_metadata_sort(scoped, sort_param)
+            sort = Rails::Contact.configuration.metadata_sorts[sort_param.to_s]
+            return scoped unless sort
+
+            key = metadata_key!(sort.fetch(:key))
+            order = if postgres?(scoped)
+              "CASE WHEN metadata->>'#{key}' ~ '^[0-9]+(\\.[0-9]+){0,1}$' " \
+                "THEN (metadata->>'#{key}')::numeric ELSE -1 END DESC, " \
+                "rails_contact_contacts.created_at DESC"
+            else
+              "CAST(metadata->>'#{key}' AS REAL) DESC, rails_contact_contacts.created_at DESC"
+            end
+            scoped.reorder(Arel.sql(order))
+          end
+
+          def metadata_key!(key)
+            key = key.to_s
+            unless METADATA_KEY_FORMAT.match?(key)
+              raise ArgumentError, "metadata filter key #{key.inspect} must match #{METADATA_KEY_FORMAT.inspect}"
+            end
+
+            key
+          end
+
+          def postgres?(scoped)
+            scoped.klass.connection.adapter_name.match?(/postgres/i)
           end
         end
       end

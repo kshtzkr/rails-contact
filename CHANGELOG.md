@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.15
+
+- **Host-configurable metadata filters and sorts.** `config.metadata_filters` declares filters over `Contact#metadata` by param name — `:values` (multi-select with optional whitelist), `:min_integer` / `:min_numeric` (numeric floors that filter out non-numeric stored values instead of casting them), and `:tag` (JSON-array containment checkbox). `config.metadata_sorts` declares `?sort=` options over numeric metadata (descending, non-numeric last, recency tiebreak). `filter_params` permits the configured params automatically, multi-selects get the same blank-strip/scalar-coercion normalization as `region`, and a metadata sort is dropped while a free-text `q` search is active (the search branch runs `SELECT DISTINCT`, which PostgreSQL cannot order by an out-of-select expression). Database backend only. Configured keys must be plain identifiers; anything else raises.
+
 ## 0.1.14
 
 - Contacts index filters: **`region` and `csv_import_id` are now multi-select**. `filter_params` permits `region: []` / `csv_import_id: []`, strips the hidden blank a `<select multiple>` submits, and coerces a legacy scalar (`?region=Europe`) to a one-element array. The database backend matches `metadata->>'csv_import_id' IN (...)` across the selected imports (a single id behaves exactly as before); `region` was already array-safe via `where(region_name:)`.
