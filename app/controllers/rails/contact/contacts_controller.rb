@@ -127,6 +127,14 @@ module Rails
       end
 
       def filter_params
+        config = Rails::Contact.configuration
+        # Host-configured metadata filters: :values filters arrive as
+        # multi-selects (arrays), every other type as a scalar. ?sort= is only
+        # a filter param when the host declared at least one metadata sort.
+        metadata_arrays  = config.metadata_filters.select { |_, f| f[:type] == :values }.keys.map(&:to_sym)
+        metadata_scalars = config.metadata_filters.reject { |_, f| f[:type] == :values }.keys.map(&:to_sym)
+        metadata_scalars << :sort if config.metadata_sorts.any?
+
         permitted = params.permit(
           :city,
           :sync_eligible,
@@ -135,21 +143,23 @@ module Rails
           :travel_date_end,
           :contact_created_at_start,
           :contact_created_at_end,
+          *metadata_scalars,
           region: [],
-          csv_import_id: []
+          csv_import_id: [],
+          **metadata_arrays.index_with { [] }
         )
 
-        normalize_multi_select!(permitted, :region)
-        normalize_multi_select!(permitted, :csv_import_id)
+        ([ :region, :csv_import_id ] + metadata_arrays).each { |key| normalize_multi_select!(permitted, key) }
         permitted
       end
 
-      # region and csv_import_id are multi-select filters: a <select multiple>
-      # submits param[] (an array) plus a hidden param[]="" that Rails always
-      # sends, so the blank must be stripped — otherwise IN ('', 'x') matches
-      # every blank-valued row. Legacy bookmarks may still send a scalar
-      # (?region=Europe); coerce those to a one-element array so the search
-      # backend only ever sees an array (or no key at all).
+      # region, csv_import_id and every configured :values metadata filter are
+      # multi-selects: a <select multiple> submits param[] (an array) plus a
+      # hidden param[]="" that Rails always sends, so the blank must be
+      # stripped — otherwise IN ('', 'x') matches every blank-valued row.
+      # Legacy bookmarks may still send a scalar (?region=Europe); coerce those
+      # to a one-element array so the search backend only ever sees an array
+      # (or no key at all).
       def normalize_multi_select!(permitted, key)
         if permitted[key].blank? && params[key].is_a?(String) && params[key].present?
           permitted[key] = [ params[key] ]

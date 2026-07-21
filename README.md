@@ -108,6 +108,7 @@ Rows can be added/removed dynamically in form UI.
 
 - Search by name/email/phone/company/job title/labels
 - Filter by city/region/sync/starred
+- Host-configurable filters and sorts over `Contact#metadata` (see `metadata_filters` below)
 - Sort by recent updates
 
 ### Actions
@@ -133,6 +134,49 @@ Rails::Contact.configure do |config|
   config.default_per_page = 25
 end
 ```
+
+
+### Metadata filters and sorts
+
+Contacts often carry app-specific data in the `metadata` JSON column. Declare
+which keys are filterable and the engine handles the rest — permitted params,
+multi-select normalization, guarded SQL, and an optional sort:
+
+```ruby
+Rails::Contact.configure do |config|
+  config.metadata_filters = {
+    # param name => filter declaration
+    "tier"      => { key: "quality_tier", type: :values, allowed: %w[hot warm standard] },
+    "min_pax"   => { key: "pax",          type: :min_integer },
+    "min_score" => { key: "score",        type: :min_numeric },
+    "vip"       => { key: "tags",         type: :tag, tag: "vip" }
+  }
+  config.metadata_sorts = {
+    # ?sort=score orders by metadata score, highest first
+    "score" => { key: "score" }
+  }
+end
+```
+
+Filter types:
+
+- `:values` — multi-select. Matches when `metadata->>key` equals any selected
+  value; an optional `allowed:` whitelist discards anything else. A scalar
+  param (legacy bookmark) is coerced to a one-element selection.
+- `:min_integer` / `:min_numeric` — numeric floor. Stored values that are not
+  numbers are filtered out, never cast, so an imported `"TBD"` cannot raise.
+- `:tag` — checkbox. Matches when the metadata key (a JSON array) contains
+  `tag:`; the param value `"1"` switches it on.
+
+Sorts order descending, put non-numeric values last, and break ties by
+recency. A metadata sort is ignored while a free-text `q` search is active:
+the search branch runs `SELECT DISTINCT`, and PostgreSQL rejects ordering by
+an expression that is not in the select list, so search results keep recency
+order.
+
+Database backend only; the Elasticsearch backend ignores metadata filters.
+Configured `key:` values must be plain identifiers (`[a-zA-Z0-9_]+`) — they
+are declared in code, never taken from request params.
 
 ### Google sync UI: gem default vs host override
 

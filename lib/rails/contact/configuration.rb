@@ -6,7 +6,8 @@ module Rails
                     :google_client_id, :google_client_secret, :google_redirect_uri,
                     :google_token_path, :reset_index_on_boot, :default_per_page,
                     :inherit_host_layout,
-                    :google_contact_family_name_suffix
+                    :google_contact_family_name_suffix,
+                    :metadata_filters, :metadata_sorts
 
       def initialize
         @contact_class_name = "Rails::Contact::Contact"
@@ -29,6 +30,35 @@ module Rails
         # importmap/Turbo match the rest of the app. Engine CSS and nested-field JS are still
         # injected from gem templates so behavior does not depend on the engine layout asset tags.
         @inherit_host_layout = true
+        # Declarative filters over Contact#metadata, keyed by the request param
+        # name. The host app decides which metadata keys are filterable; the
+        # engine permits the params, guards the SQL, and applies the filter
+        # (database backend only). Example:
+        #
+        #   config.metadata_filters = {
+        #     "tier"      => { key: "quality_tier", type: :values, allowed: %w[hot warm standard] },
+        #     "min_pax"   => { key: "pax",          type: :min_integer },
+        #     "min_score" => { key: "score",        type: :min_numeric },
+        #     "vip"       => { key: "tags",         type: :tag, tag: "vip" }
+        #   }
+        #
+        # :values      — multi-select; matches metadata->>key IN (...). Optional
+        #                :allowed whitelist discards anything else.
+        # :min_integer — numeric floor over an integer-ish metadata string;
+        #                non-numeric stored values are filtered out, never cast.
+        # :min_numeric — same, but accepts decimals.
+        # :tag         — checkbox; matches when the metadata key (a JSON array)
+        #                contains :tag. Param value "1" switches it on.
+        @metadata_filters = {}
+        # Sort options over numeric metadata, keyed by the ?sort= param value:
+        #
+        #   config.metadata_sorts = { "score" => { key: "score" } }
+        #
+        # Sorts descending, non-numeric values last, ties broken by recency.
+        # Ignored while a free-text q search is active: the search branch runs
+        # SELECT DISTINCT and PostgreSQL rejects ordering by an expression that
+        # is not in the select list, so search results keep recency order.
+        @metadata_sorts = {}
       end
     end
   end
