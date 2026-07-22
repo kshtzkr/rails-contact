@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Documentation
+
+- Rewrote the README with a badge row, table of contents, requirements, a
+  gem-name/require/namespace note, and usage sections for search, Google sync,
+  merge, and metadata filters.
+- Added `docs/CONFIGURATION.md` with the full settings reference (type, default,
+  environment variable, and behavior for every configuration option).
+- Added `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
+- Removed the duplicate `LICENSE.txt` (identical to `MIT-LICENSE`) and dropped it
+  from the gemspec file list; removed committed `.gem` build artifacts.
+
 ## 0.1.15
 
 - **Host-configurable metadata filters and sorts.** `config.metadata_filters` declares filters over `Contact#metadata` by param name — `:values` (multi-select with optional whitelist), `:min_integer` / `:min_numeric` (numeric floors that filter out non-numeric stored values instead of casting them), and `:tag` (JSON-array containment checkbox). `config.metadata_sorts` declares `?sort=` options over numeric metadata (descending, non-numeric last, recency tiebreak). `filter_params` permits the configured params automatically, multi-selects get the same blank-strip/scalar-coercion normalization as `region`, and a metadata sort is dropped while a free-text `q` search is active (the search branch runs `SELECT DISTINCT`, which PostgreSQL cannot order by an out-of-select expression). Database backend only. Configured keys must be plain identifiers; anything else raises.
