@@ -49,6 +49,10 @@ module Rails
         # :min_numeric — same, but accepts decimals.
         # :tag         — checkbox; matches when the metadata key (a JSON array)
         #                contains :tag. Param value "1" switches it on.
+        # :exclude     — hides rows whose key equals :value. Add default: :on
+        #                to apply it even when the param is absent; an
+        #                explicit "0" shows everything. Rows missing the key
+        #                always pass.
         @metadata_filters = {}
         # Sort options over numeric metadata, keyed by the ?sort= param value:
         #

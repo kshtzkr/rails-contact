@@ -75,6 +75,10 @@ as a guard against interpolating an unsafe fragment into SQL.
   also accepts decimals.
 - `:tag` — checkbox. Matches when the metadata key (a JSON array) contains `tag:`. The
   param value `"1"` switches it on.
+- `:exclude` — hides rows whose key equals `value:`. Add `default: :on` to apply the
+  filter even when the request param is absent (first page load, bookmarks); an
+  explicit `"0"` shows everything — built for default-on "hide test data" checkboxes.
+  Rows missing the key always pass, so unclassified data is never hidden.
 
 ### Sorts
 
