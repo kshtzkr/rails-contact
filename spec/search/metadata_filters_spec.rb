@@ -13,7 +13,8 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
       "window" => { key: "booking_window", type: :values },
       "min_pax" => { key: "pax", type: :min_integer },
       "min_score" => { key: "score", type: :min_numeric },
-      "vip" => { key: "tags", type: :tag, tag: "vip" }
+      "vip" => { key: "tags", type: :tag, tag: "vip" },
+      "hide_junk" => { key: "authenticity", type: :exclude, value: "junk", default: :on }
     }
     config.metadata_sorts = { "score" => { key: "score" } }
     example.run
@@ -83,6 +84,26 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
 
     it "is inert when the checkbox is off" do
       expect(records("vip" => "0")).to match_array([ hot, warm, junk ])
+    end
+  end
+
+  describe ":exclude filter (default on)" do
+    let!(:junk) { make("Junk2", "authenticity" => "junk") }
+
+    it "hides the excluded value when the param is ABSENT (default on)" do
+      expect(records({})).not_to include(junk)
+    end
+
+    it "hides when the param is affirmative" do
+      expect(records("hide_junk" => "1")).not_to include(junk)
+    end
+
+    it "shows everything when explicitly disabled with 0" do
+      expect(records("hide_junk" => "0")).to include(junk)
+    end
+
+    it "never hides rows that simply lack the key (unclassified data)" do
+      expect(records({})).to include(hot, warm)
     end
   end
 

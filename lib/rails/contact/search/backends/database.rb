@@ -104,7 +104,10 @@ module Rails
           def apply_metadata_filters(scoped, filters)
             Rails::Contact.configuration.metadata_filters.each do |param, config|
               value = filters[param.to_s]
-              next if value.blank?
+              # A blank param means "not filtering" — except for default-on
+              # filters (config default: :on), which apply until the user
+              # explicitly switches them off with a false-y value ("0").
+              next if value.blank? && config[:default] != :on
 
               key = metadata_key!(config.fetch(:key))
               scoped = case config.fetch(:type)
@@ -112,6 +115,7 @@ module Rails
               when :min_integer then apply_min_filter(scoped, key, value, decimals: false)
               when :min_numeric then apply_min_filter(scoped, key, value, decimals: true)
               when :tag         then apply_tag_filter(scoped, key, value, config.fetch(:tag))
+              when :exclude     then apply_exclude_filter(scoped, key, value, config.fetch(:value))
               else
                 raise ArgumentError, "unknown metadata filter type #{config[:type].inspect} for #{param.inspect}"
               end
@@ -155,6 +159,23 @@ module Rails
                 "EXISTS (SELECT 1 FROM json_each(rails_contact_contacts.metadata, '$.#{key}') WHERE json_each.value = ?)",
                 tag
               )
+            end
+          end
+
+          # Hide rows whose metadata key equals the configured value. Built
+          # for default-on filters (\"hide test data\"): a nil param arrives
+          # here only when the config says default: :on, and nil casts to
+          # nil (not false), so the exclusion applies; an explicit "0"
+          # switches it off. Rows MISSING the key must pass — unclassified
+          # legacy data is not test data.
+          def apply_exclude_filter(scoped, key, value, excluded)
+            return scoped if value.present? && ActiveModel::Type::Boolean.new.cast(value) == false
+
+            if postgres?(scoped)
+              scoped.where("metadata->>'#{key}' IS DISTINCT FROM ?", excluded.to_s)
+            else
+              # SQLite (test harness): IS DISTINCT FROM needs 3.39+.
+              scoped.where("COALESCE(metadata->>'#{key}', '') <> ?", excluded.to_s)
             end
           end
 

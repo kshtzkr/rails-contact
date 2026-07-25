@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.16
+
+- **New metadata filter type `:exclude`** — hides rows whose metadata key equals a configured value, e.g. `{ key: "authenticity", type: :exclude, value: "test", default: :on }`. With `default: :on` the filter applies even when the request param is absent (first page load, bookmarks) and an explicit false-y value (`"0"`) switches it off — built for default-on "hide test data" checkboxes. Rows missing the key always pass, so unclassified legacy data is never hidden.
+
 ## [Unreleased]
 
 ### Documentation
