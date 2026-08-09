@@ -46,4 +46,112 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
       expect { search_for("a" * 1000) }.not_to raise_error
     end
   end
+
+  describe "prefix search arms" do
+    let!(:dave) do
+      create(:rails_contact_contact,
+             given_name: "Dave", family_name: "Sharma",
+             metadata: { "company" => "Acme Travels", "job_title" => "Planner" }.to_json).tap do |c|
+        c.emails.create!(value: "Dave@Example.com")
+        c.phones.create!(value: "+91 98123 45670", e164: "+919812345670")
+        c.labels = [ Rails::Contact::Label.find_or_create_by!(name: "vip-club") ]
+      end
+    end
+
+    def search_for(query)
+      described_class.new.search(query, {}, page: 1, per_page: 25).records
+    end
+
+    it "matches a given-name prefix case-insensitively" do
+      expect(search_for("dav")).to include(dave)
+    end
+
+    it "matches a family-name prefix" do
+      expect(search_for("sha")).to include(dave)
+    end
+
+    it "no longer matches a mid-string fragment (the index-serveable trade)" do
+      expect(search_for("ave")).not_to include(dave)
+    end
+
+    it "matches an email prefix" do
+      expect(search_for("dave@ex")).to include(dave)
+    end
+
+    it "matches bare digits against the +-prefixed e164" do
+      expect(search_for("91981")).to include(dave)
+    end
+
+    it "matches the full plus-form phone prefix" do
+      expect(search_for("+91981")).to include(dave)
+    end
+
+    it "matches a company prefix" do
+      expect(search_for("acme")).to include(dave)
+    end
+
+    it "matches a job-title prefix" do
+      expect(search_for("plan")).to include(dave)
+    end
+
+    it "matches a label prefix" do
+      expect(search_for("vip")).to include(dave)
+    end
+
+    it "does not duplicate a contact matched by several arms" do
+      # "dave" hits both the given_name and email arms; UNION dedupes ids.
+      expect(search_for("dave").count(dave)).to eq(1)
+    end
+  end
+
+  describe "result counting" do
+    let(:backend) { described_class.new }
+
+    it "counts exactly on non-PostgreSQL adapters" do
+      result = backend.search("", {}, page: 1, per_page: 25)
+      expect(result.total_count).to eq(Rails::Contact::Contact.count)
+    end
+
+    context "when the adapter reports PostgreSQL" do
+      before { allow(backend).to receive(:postgres?).and_return(true) }
+
+      it "uses the planner estimate at or above the threshold" do
+        allow(backend).to receive(:planner_estimate).and_return(50_000)
+
+        expect(backend.search("", {}, page: 1, per_page: 25).total_count).to eq(50_000)
+      end
+
+      it "counts exactly below the threshold" do
+        allow(backend).to receive(:planner_estimate).and_return(5)
+
+        expect(backend.search("", {}, page: 1, per_page: 25).total_count)
+          .to eq(Rails::Contact::Contact.count)
+      end
+
+      it "falls back to an exact count when the planner call fails" do
+        # No stub on planner_estimate: on this SQLite harness the real
+        # EXPLAIN (FORMAT JSON) raises and the rescue returns nil.
+        expect(backend.search("", {}, page: 1, per_page: 25).total_count)
+          .to eq(Rails::Contact::Contact.count)
+      end
+    end
+
+    describe "#planner_estimate" do
+      let(:scope) { Rails::Contact::Contact.all }
+
+      it "reads Plan Rows from EXPLAIN (FORMAT JSON)" do
+        allow(scope.klass.connection).to receive(:select_value)
+          .with(/\AEXPLAIN \(FORMAT JSON\)/)
+          .and_return('[{"Plan": {"Plan Rows": 123456}}]')
+
+        expect(backend.send(:planner_estimate, scope)).to eq(123_456)
+      end
+
+      it "returns nil on malformed planner output" do
+        allow(scope.klass.connection).to receive(:select_value).and_return("not json")
+
+        expect(backend.send(:planner_estimate, scope)).to be_nil
+      end
+    end
+  end
 end

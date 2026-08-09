@@ -14,39 +14,85 @@ module Rails
 
           def search(query, filters, page:, per_page:)
             query = sanitize_query(query)
-            # Metadata sort cannot combine with free-text search: the search
-            # branch below runs SELECT DISTINCT, and PostgreSQL rejects ORDER BY
-            # expressions that are not in the select list. Searching means
-            # hunting a specific contact anyway, so q results keep recency order.
+            # Free-text search keeps recency order: searching means hunting a
+            # specific contact, so a metadata sort would only bury the match.
             filters = filters.except("sort") if query.present?
             offset = (page - 1) * per_page
             scope = Contact.includes(:emails, :phones, :labels).recent_first
             scope = apply_filters(scope, filters)
+            scope = apply_query(scope, query) if query.present?
 
-            if query.blank?
-              total = scope.count
-              records = scope.offset(offset).limit(per_page).to_a
-              return Search::Result.new(records: records, total_count: total, page: page, per_page: per_page)
-            end
-
-            wildcard = "%#{query.downcase}%"
-            filtered = scope.left_joins(:emails, :phones, :labels).where(
-              "LOWER(rails_contact_contacts.given_name) LIKE :q OR "\
-              "LOWER(rails_contact_contacts.family_name) LIKE :q OR "\
-              "LOWER(COALESCE(rails_contact_contacts.metadata->>'company', '')) LIKE :q OR "\
-              "LOWER(COALESCE(rails_contact_contacts.metadata->>'job_title', '')) LIKE :q OR "\
-              "LOWER(rails_contact_contact_emails.value) LIKE :q OR "\
-              "rails_contact_contact_phones.e164 LIKE :raw OR "\
-              "LOWER(rails_contact_labels.name) LIKE :q",
-              q: wildcard,
-              raw: "%#{query}%"
-            ).distinct
-            total = filtered.count(:id)
-            records = filtered.offset(offset).limit(per_page).to_a
-            Search::Result.new(records: records, total_count: total, page: page, per_page: per_page)
+            Search::Result.new(
+              records: scope.offset(offset).limit(per_page).to_a,
+              total_count: count_for(scope),
+              page: page,
+              per_page: per_page
+            )
           end
 
           private
+
+          # Prefix search, deliberately: LOWER(col) LIKE 'q%' is served by a
+          # plain btree (text_pattern_ops on PostgreSQL), where the previous
+          # '%q%' substring form could use no index at all and forced a full
+          # scan of a 3-way-joined, DISTINCTed row set on a multi-million-row
+          # table.
+          #
+          # Each match arm lives in its own subquery UNIONed by id rather than
+          # OR'd into one WHERE: an OR mixing table columns and EXISTS probes
+          # can never use a bitmap-index combination, but a UNION of id-sets
+          # lets the planner drive every arm from its own index and semi-join
+          # the small result against the ordered contact scan. Phone numbers
+          # are probed with and without the e164 '+' so typing bare digits
+          # still matches.
+          def apply_query(scoped, query)
+            prefix = "#{query.downcase}%"
+            scoped.where(
+              "rails_contact_contacts.id IN (" \
+              "SELECT c.id FROM rails_contact_contacts c WHERE LOWER(c.given_name) LIKE :q " \
+              "UNION SELECT c.id FROM rails_contact_contacts c WHERE LOWER(c.family_name) LIKE :q " \
+              "UNION SELECT c.id FROM rails_contact_contacts c WHERE LOWER(COALESCE(c.metadata->>'company', '')) LIKE :q " \
+              "UNION SELECT c.id FROM rails_contact_contacts c WHERE LOWER(COALESCE(c.metadata->>'job_title', '')) LIKE :q " \
+              "UNION SELECT e.contact_id FROM rails_contact_contact_emails e WHERE LOWER(e.value) LIKE :q " \
+              "UNION SELECT p.contact_id FROM rails_contact_contact_phones p WHERE p.e164 LIKE :raw OR p.e164 LIKE :plus_raw " \
+              "UNION SELECT cl.contact_id FROM rails_contact_contact_labels cl " \
+              "JOIN rails_contact_labels l ON l.id = cl.label_id WHERE LOWER(l.name) LIKE :q" \
+              ")",
+              q: prefix,
+              raw: "#{query}%",
+              plus_raw: "+#{query}%"
+            )
+          end
+
+          # Exact COUNT(*) walks every matching row and was one of the two
+          # full-table passes behind 40-second index pages. On PostgreSQL,
+          # large counts come from the planner's row estimate instead —
+          # milliseconds regardless of table size. Small results (under
+          # APPROX_COUNT_THRESHOLD) still count exactly: cheap to do, and
+          # operators expect precise numbers on short lists. Estimates are
+          # for pager display only — never feed them into arithmetic.
+          APPROX_COUNT_THRESHOLD = 1_000
+
+          def count_for(scoped)
+            return scoped.count unless postgres?(scoped)
+
+            estimate = planner_estimate(scoped)
+            return scoped.count if estimate.nil? || estimate < APPROX_COUNT_THRESHOLD
+
+            estimate
+          end
+
+          # EXPLAIN (FORMAT JSON) without ANALYZE executes nothing; the
+          # relation's own to_sql carries its bound values inlined, so there
+          # is no injection surface beyond what the scope already is.
+          # Estimates track table statistics, so they are only as fresh as
+          # the last ANALYZE.
+          def planner_estimate(scoped)
+            plan = scoped.klass.connection.select_value("EXPLAIN (FORMAT JSON) #{scoped.to_sql}")
+            JSON.parse(plan.to_s).dig(0, "Plan", "Plan Rows")
+          rescue ActiveRecord::StatementInvalid, JSON::ParserError
+            nil
+          end
 
           # Escape LIKE metacharacters (% _ \) so a user typing "%" can't widen
           # the match to every row, and cap length to keep the pattern bounded.

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.17
+
+- **Database backend free-text search is now prefix search.** `q` matches
+  `LOWER(col) LIKE 'q%'` instead of `'%q%'`, so a plain btree
+  (`text_pattern_ops` on PostgreSQL) can serve every arm — the substring form
+  could use no index and forced a full scan of a 3-way-joined, `DISTINCT`ed
+  row set on multi-million-row tables. Match arms (given/family name, company,
+  job title, email, phone, label) run as a `UNION` of id-subqueries rather
+  than one `OR`, letting the planner drive each arm from its own index. Phone
+  input matches with and without the e164 `+`, so typing bare digits still
+  works. Trade-off: mid-string fragments no longer match ("`ave`" no longer
+  finds "Dave") — matching how operators actually hunt (start of a name,
+  email, or number).
+- **Large result counts use the PostgreSQL planner estimate.** Exact
+  `COUNT(*)` walks every matching row on every page load; results at or above
+  1,000 rows now take the row estimate from `EXPLAIN (FORMAT JSON)`
+  (milliseconds at any table size), while smaller results keep exact counts.
+  Non-PostgreSQL adapters and planner failures fall back to exact counting.
+  Estimates are display-only — never feed `total_count` into arithmetic.
+
 ## 0.1.16
 
 - **New metadata filter type `:exclude`** — hides rows whose metadata key equals a configured value, e.g. `{ key: "authenticity", type: :exclude, value: "test", default: :on }`. With `default: :on` the filter applies even when the request param is absent (first page load, bookmarks) and an explicit false-y value (`"0"`) switches it off — built for default-on "hide test data" checkboxes. Rows missing the key always pass, so unclassified legacy data is never hidden.
