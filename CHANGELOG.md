@@ -9,7 +9,10 @@
   scalar, which silently dropped every value but the last. Blank entries
   (the hidden option a `<select multiple>` always submits) are stripped, and
   an old single-value bookmark (`?city=Pune`) is coerced to a one-element
-  array, so no existing link changes meaning.
+  array, so no existing link changes meaning. The database backend now drops
+  blank entries from `city`/`region` itself as well, so a caller reaching it
+  directly gets "no filter" from an untouched multi-select instead of zero
+  rows.
 
 ## 0.1.17
 
