@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.18
+
+- **The `city` filter is a multi-select.** `?city[]=Pune&city[]=Delhi` now
+  filters on several current cities at once, matching how `region` and
+  `csv_import_id` already behave. The database backend always handled an
+  array (`where(current_city: [...])`) — only the parameter permit was
+  scalar, which silently dropped every value but the last. Blank entries
+  (the hidden option a `<select multiple>` always submits) are stripped, and
+  an old single-value bookmark (`?city=Pune`) is coerced to a one-element
+  array, so no existing link changes meaning.
+
 ## 0.1.17
 
 - **Database backend free-text search is now prefix search.** `q` matches
