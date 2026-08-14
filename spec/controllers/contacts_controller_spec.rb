@@ -4,16 +4,26 @@ RSpec.describe Rails::Contact::ContactsController do
   let(:controller) { described_class.new }
 
   describe "private filter params" do
-    it "permits city/sync_eligible and coerces a scalar region to an array" do
+    # city joined region as a multi-select in 0.1.18, so a scalar from an old
+    # bookmark is coerced to a one-element array rather than kept as a string.
+    it "permits sync_eligible and coerces scalar city/region to arrays" do
       controller.params = ActionController::Parameters.new(city: "Delhi", region: "Europe", sync_eligible: "true", x: "1")
       permitted = controller.send(:filter_params)
-      expect(permitted.to_h).to eq({ "city" => "Delhi", "region" => [ "Europe" ], "sync_eligible" => "true" })
+      expect(permitted.to_h).to eq({ "city" => [ "Delhi" ], "region" => [ "Europe" ], "sync_eligible" => "true" })
     end
 
-    it "permits multi-select region[] and csv_import_id[] arrays" do
-      controller.params = ActionController::Parameters.new(region: [ "Europe", "Asia" ], csv_import_id: [ "5", "7" ])
+    it "permits multi-select city[], region[] and csv_import_id[] arrays" do
+      controller.params = ActionController::Parameters.new(city: [ "Pune", "Delhi" ], region: [ "Europe", "Asia" ], csv_import_id: [ "5", "7" ])
       permitted = controller.send(:filter_params)
-      expect(permitted.to_h).to eq({ "region" => [ "Europe", "Asia" ], "csv_import_id" => [ "5", "7" ] })
+      expect(permitted.to_h).to eq({ "city" => [ "Pune", "Delhi" ], "region" => [ "Europe", "Asia" ], "csv_import_id" => [ "5", "7" ] })
+    end
+
+    it "strips the blank a city multi-select submits, and drops it when only blanks arrive" do
+      controller.params = ActionController::Parameters.new(city: [ "", "Pune" ])
+      expect(controller.send(:filter_params).to_h).to eq({ "city" => [ "Pune" ] })
+
+      controller.params = ActionController::Parameters.new(city: [ "" ])
+      expect(controller.send(:filter_params).to_h).to eq({})
     end
 
     it "strips the hidden blank a <select multiple> submits" do

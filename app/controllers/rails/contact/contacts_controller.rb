@@ -136,7 +136,6 @@ module Rails
         metadata_scalars << :sort if config.metadata_sorts.any?
 
         permitted = params.permit(
-          :city,
           :sync_eligible,
           :starred,
           :travel_date_start,
@@ -144,16 +143,17 @@ module Rails
           :contact_created_at_start,
           :contact_created_at_end,
           *metadata_scalars,
+          city: [],
           region: [],
           csv_import_id: [],
           **metadata_arrays.index_with { [] }
         )
 
-        ([ :region, :csv_import_id ] + metadata_arrays).each { |key| normalize_multi_select!(permitted, key) }
+        ([ :city, :region, :csv_import_id ] + metadata_arrays).each { |key| normalize_multi_select!(permitted, key) }
         permitted
       end
 
-      # region, csv_import_id and every configured :values metadata filter are
+      # city, region, csv_import_id and every configured :values metadata filter are
       # multi-selects: a <select multiple> submits param[] (an array) plus a
       # hidden param[]="" that Rails always sends, so the blank must be
       # stripped — otherwise IN ('', 'x') matches every blank-valued row.

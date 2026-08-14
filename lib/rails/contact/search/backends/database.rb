@@ -106,8 +106,16 @@ module Rails
 
           def apply_filters(scope, filters)
             scoped = scope
-            scoped = scoped.where(current_city: filters["city"]) if filters["city"].present?
-            scoped = scoped.where(region_name: filters["region"]) if filters["region"].present?
+            # city and region are multi-selects: one value or many. Blanks are
+            # dropped here as well as in the controller — an untouched
+            # <select multiple> submits [""], and `where(col: [""])` would
+            # return nothing at all rather than "no city filter". A caller
+            # reaching the backend directly gets the same answer as one coming
+            # through filter_params.
+            %w[city region].zip(%i[current_city region_name]).each do |key, column|
+              values = Array(filters[key]).map(&:to_s).reject(&:blank?)
+              scoped = scoped.where(column => values) if values.any?
+            end
             scoped = scoped.where(starred: ActiveModel::Type::Boolean.new.cast(filters["starred"])) if filters["starred"].present?
             if filters["sync_eligible"].present?
               scoped = scoped.where(sync_eligible: ActiveModel::Type::Boolean.new.cast(filters["sync_eligible"]))

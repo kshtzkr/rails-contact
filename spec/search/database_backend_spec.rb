@@ -29,6 +29,28 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
     end
   end
 
+  # City became a multi-select in 0.1.18. The backend always accepted an array
+  # here — what was missing was a permit that let one through.
+  describe "city filter (multi-select)" do
+    # Distinct from the factory default ("Delhi"), so alice/bob/carol above
+    # can't drift into these expectations.
+    let!(:pune)   { create(:rails_contact_contact, given_name: "Pia", current_city: "Pune") }
+    let!(:jaipur) { create(:rails_contact_contact, given_name: "Dev", current_city: "Jaipur") }
+    let!(:kochi)  { create(:rails_contact_contact, given_name: "Mira", current_city: "Kochi") }
+
+    it "matches contacts in every selected city (array -> IN)" do
+      expect(records("city" => [ "Pune", "Jaipur" ])).to match_array([ pune, jaipur ])
+    end
+
+    it "matches a single city exactly as before (scalar)" do
+      expect(records("city" => "Kochi")).to match_array([ kochi ])
+    end
+
+    it "applies no constraint when the selection is blank only" do
+      expect(records("city" => [ "" ]).count).to eq(Rails::Contact::Contact.count)
+    end
+  end
+
   describe "query sanitization" do
     def search_for(query)
       described_class.new.search(query, {}, page: 1, per_page: 25).records
