@@ -22,9 +22,12 @@ module Rails
             scope = apply_filters(scope, filters)
             scope = apply_query(scope, query) if query.present?
 
+            total_count, count_capped = count_for(scope)
+
             Search::Result.new(
               records: scope.offset(offset).limit(per_page).to_a,
-              total_count: count_for(scope),
+              total_count: total_count,
+              count_capped: count_capped,
               page: page,
               per_page: per_page
             )
@@ -65,33 +68,33 @@ module Rails
           end
 
           # Exact COUNT(*) walks every matching row and was one of the two
-          # full-table passes behind 40-second index pages. On PostgreSQL,
-          # large counts come from the planner's row estimate instead —
-          # milliseconds regardless of table size. Small results (under
-          # APPROX_COUNT_THRESHOLD) still count exactly: cheap to do, and
-          # operators expect precise numbers on short lists. Estimates are
-          # for pager display only — never feed them into arithmetic.
-          APPROX_COUNT_THRESHOLD = 1_000
+          # full-table passes behind 40-second index pages; the planner
+          # estimate that replaced it then printed guesses as counts — a sheet
+          # of 364 contacts read "1,005 · Page 1 / 41", and the same number
+          # sized a WhatsApp broadcast. So count exactly, but bounded:
+          # COUNT(*) over the matching rows capped at MAX_EXACT_COUNT + 1 lets
+          # the database stop scanning at the LIMIT, so no view pays a
+          # full-table pass, while every realistic filtered list gets a true
+          # number. Past the cap the caller is told so and shows "10,000+".
+          MAX_EXACT_COUNT = 10_000
 
+          # Returns [count, capped]. count never exceeds MAX_EXACT_COUNT.
           def count_for(scoped)
-            return scoped.count unless postgres?(scoped)
+            total = scoped.klass.unscoped.from(bounded_scope(scoped), :bounded_count).count
 
-            estimate = planner_estimate(scoped)
-            return scoped.count if estimate.nil? || estimate < APPROX_COUNT_THRESHOLD
-
-            estimate
+            [ [ total, MAX_EXACT_COUNT ].min, total > MAX_EXACT_COUNT ]
           end
 
-          # EXPLAIN (FORMAT JSON) without ANALYZE executes nothing; the
-          # relation's own to_sql carries its bound values inlined, so there
-          # is no injection surface beyond what the scope already is.
-          # Estimates track table statistics, so they are only as fresh as
-          # the last ANALYZE.
-          def planner_estimate(scoped)
-            plan = scoped.klass.connection.select_value("EXPLAIN (FORMAT JSON) #{scoped.to_sql}")
-            JSON.parse(plan.to_s).dig(0, "Plan", "Plan Rows")
-          rescue ActiveRecord::StatementInvalid, JSON::ParserError
-            nil
+          # ORDER BY is stripped rather than kept: recent_first orders by
+          # updated_at and a metadata sort is a CASE expression — either one
+          # makes the planner sort the whole matching set before it can honour
+          # the LIMIT, which is the full pass this is here to avoid. SELECT 1
+          # keeps it a bare row scan, and eager-loading has no bearing on how
+          # many rows match.
+          def bounded_scope(scoped)
+            scoped.except(:order, :includes, :eager_load, :preload)
+                  .select("1")
+                  .limit(MAX_EXACT_COUNT + 1)
           end
 
           # Escape LIKE metacharacters (% _ \) so a user typing "%" can't widen

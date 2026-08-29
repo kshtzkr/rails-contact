@@ -129,50 +129,49 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
   describe "result counting" do
     let(:backend) { described_class.new }
 
-    it "counts exactly on non-PostgreSQL adapters" do
-      result = backend.search("", {}, page: 1, per_page: 25)
+    def result(filters = {}, per_page: 25)
+      backend.search("", filters, page: 1, per_page: per_page)
+    end
+
+    it "counts a filtered scope exactly" do
+      # The production bug: a sheet holding one contact reported four figures
+      # because the count was a planner estimate, not a count.
+      expect(result({ "csv_import_id" => [ "imp_1" ] }).total_count).to eq(1)
+    end
+
+    it "counts the unfiltered scope exactly" do
       expect(result.total_count).to eq(Rails::Contact::Contact.count)
     end
 
-    context "when the adapter reports PostgreSQL" do
-      before { allow(backend).to receive(:postgres?).and_return(true) }
-
-      it "uses the planner estimate at or above the threshold" do
-        allow(backend).to receive(:planner_estimate).and_return(50_000)
-
-        expect(backend.search("", {}, page: 1, per_page: 25).total_count).to eq(50_000)
-      end
-
-      it "counts exactly below the threshold" do
-        allow(backend).to receive(:planner_estimate).and_return(5)
-
-        expect(backend.search("", {}, page: 1, per_page: 25).total_count)
-          .to eq(Rails::Contact::Contact.count)
-      end
-
-      it "falls back to an exact count when the planner call fails" do
-        # No stub on planner_estimate: on this SQLite harness the real
-        # EXPLAIN (FORMAT JSON) raises and the rescue returns nil.
-        expect(backend.search("", {}, page: 1, per_page: 25).total_count)
-          .to eq(Rails::Contact::Contact.count)
-      end
+    it "reports pages from the real count" do
+      expect(result({}, per_page: 2).total_pages).to eq(2)
     end
 
-    describe "#planner_estimate" do
-      let(:scope) { Rails::Contact::Contact.all }
+    it "counts the same under a metadata sort" do
+      # ORDER BY is stripped inside the count subquery so the LIMIT can
+      # short-circuit; stripping it must not change the answer.
+      config = Rails::Contact.configuration
+      original = config.metadata_sorts
+      config.metadata_sorts = { "score" => { key: "score" } }
 
-      it "reads Plan Rows from EXPLAIN (FORMAT JSON)" do
-        allow(scope.klass.connection).to receive(:select_value)
-          .with(/\AEXPLAIN \(FORMAT JSON\)/)
-          .and_return('[{"Plan": {"Plan Rows": 123456}}]')
+      expect(result({ "sort" => "score" }).total_count).to eq(3)
+    ensure
+      config.metadata_sorts = original
+    end
 
-        expect(backend.send(:planner_estimate, scope)).to eq(123_456)
+    context "when more rows match than the cap" do
+      before { stub_const("#{described_class}::MAX_EXACT_COUNT", 2) }
+
+      it "clamps the count to the cap and flags it" do
+        expect(result.total_count).to eq(2)
+        expect(result.count_capped?).to be(true)
       end
 
-      it "returns nil on malformed planner output" do
-        allow(scope.klass.connection).to receive(:select_value).and_return("not json")
+      it "does not flag a set that exactly fills the cap" do
+        carol.destroy!
 
-        expect(backend.send(:planner_estimate, scope)).to be_nil
+        expect(result.total_count).to eq(2)
+        expect(result.count_capped?).to be(false)
       end
     end
   end

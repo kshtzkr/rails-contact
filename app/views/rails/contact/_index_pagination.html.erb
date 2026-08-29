@@ -4,7 +4,7 @@
       <% start_i = (@page - 1) * @per_page + 1 %>
       <% end_i = [ @page * @per_page, @total_count ].min %>
       Showing <span class="font-medium text-gray-900"><%= start_i %>–<%= end_i %></span>
-      of <span class="font-medium text-gray-900"><%= number_with_delimiter(@total_count) %></span>
+      of <span class="font-medium text-gray-900"><%= contact_count_label(@total_count, @count_capped) %></span>
       <% if @per_page.present? && @per_page > 0 %>
         <span class="text-gray-500">(<%= @per_page %> per page)</span>
       <% end %>
