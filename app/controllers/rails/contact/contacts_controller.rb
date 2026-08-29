@@ -17,6 +17,9 @@ module Rails
         ).call
         @contacts = result.records
         @total_count = result.total_count
+        # A capped count is a floor, not a total — the pager and any audience
+        # panel built on @total_count must render it as "N+".
+        @count_capped = result.count_capped?
         @page = result.page
         @per_page = result.per_page
         @total_pages = result.total_pages

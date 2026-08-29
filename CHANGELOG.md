@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.19
+
+- **Result counts are exact again, and bounded.** 0.1.17 replaced large exact
+  counts with the PostgreSQL planner's row estimate, which the index then
+  printed as if it were a count: a filtered list of 364 contacts reported
+  "Showing 1-25 of 1,005" across 41 pages, most of them empty, and host apps
+  reading `total_count` sized outbound campaigns off the same guess. Estimates
+  are worst exactly where they matter - a value the last `ANALYZE` has not
+  sampled (a freshly imported batch) falls back to `rows / n_distinct`.
+  `count_for` now runs `COUNT(*)` over the matching rows capped at
+  `MAX_EXACT_COUNT + 1` (10,000), with `ORDER BY` and eager-loading stripped
+  from the subquery so the database stops scanning at the `LIMIT` - the
+  full-table pass the estimate existed to avoid never happens, and every
+  realistic filtered list gets a true number. Past the cap,
+  `Search::Result#count_capped?` is true, `total_count` is the cap, and the
+  new `contact_count_label` helper renders it as "10,000+". `@count_capped` is
+  exposed to views alongside `@total_count`.
+
 ## 0.1.18
 
 - **The `city` filter is a multi-select.** `?city[]=Pune&city[]=Delhi` now
