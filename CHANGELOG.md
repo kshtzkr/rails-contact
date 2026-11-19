@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.20
+
+- **A phone typed without its country code is found again.** Since search
+  became prefix-only, "9812345670" no longer matched "+919812345670": the
+  stored number starts with the country code, so no prefix of the typed
+  digits can reach it. A query of seven or more digits and nothing else now
+  matches anywhere in the stored number. Only that case scans the phones
+  table; names, emails, labels and shorter digit runs stay index-served
+  prefix matches.
+
 ## 0.1.19
 
 - **Result counts are exact again, and bounded.** 0.1.17 replaced large exact
