@@ -50,6 +50,10 @@ module Rails
           # still matches.
           def apply_query(scoped, query)
             prefix = "#{query.downcase}%"
+            # A long run of digits is a phone typed without its country code
+            # ("9812345670" for "+919812345670"), which no prefix can find. Only
+            # that case scans the phones table; every other arm stays a prefix.
+            phone = query.match?(/\A\d{7,}\z/) ? "%#{query}%" : "#{query}%"
             scoped.where(
               "rails_contact_contacts.id IN (" \
               "SELECT c.id FROM rails_contact_contacts c WHERE LOWER(c.given_name) LIKE :q " \
@@ -62,7 +66,7 @@ module Rails
               "JOIN rails_contact_labels l ON l.id = cl.label_id WHERE LOWER(l.name) LIKE :q" \
               ")",
               q: prefix,
-              raw: "#{query}%",
+              raw: phone,
               plus_raw: "+#{query}%"
             )
           end

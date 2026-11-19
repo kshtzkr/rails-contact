@@ -104,6 +104,14 @@ RSpec.describe Rails::Contact::Search::Backends::Database do
       expect(search_for("91981")).to include(dave)
     end
 
+    it "matches a phone typed without its country code" do
+      expect(search_for("9812345670")).to include(dave)
+    end
+
+    it "keeps short digit runs a prefix match" do
+      expect(search_for("98123")).not_to include(dave)
+    end
+
     it "matches the full plus-form phone prefix" do
       expect(search_for("+91981")).to include(dave)
     end
